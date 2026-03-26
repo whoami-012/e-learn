@@ -53,6 +53,8 @@ htmlcov/
 # ── Uploads / Media ──────────────────────────────────────
 uploads/
 media/
+implementation_plan.md
+Document For Educational Application.pptx.pdf
 
 # ── Docker ───────────────────────────────────────────────
 *.override.yml
