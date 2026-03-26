@@ -22,6 +22,5 @@ class Enrollment(Base):
 
     __table_args__ = (
         UniqueConstraint("user_id", "course_id", name="unique_enrollment"),
-        Index("idx_enrollments_user", "user_id"),
-        Index("idx_enrollments_course", "course_id"),
+        Index("idx_enrollment_user_course", "user_id", "course_id"),
     )
