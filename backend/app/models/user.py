@@ -15,13 +15,12 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     role = Column(user_role_enum, nullable=False)
-    is_active = Column(Boolean, default=True)
-    is_deleted = Column(Boolean, default=False)  # soft delete
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    is_active = Column(Boolean, nullable=False, default=True)
+    is_deleted = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False, default=func.now())
+    updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
 
-    # Relationships
-    # passive_deletes=True: let DB handle SET NULL on faculty_id, don't load courses on delete
+    # Relationships — passive_deletes=True: let DB handle ON DELETE CASCADE/SET NULL
     courses = relationship(
         "Course",
         back_populates="faculty",

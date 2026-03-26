@@ -11,23 +11,23 @@ class Course(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    price = Column(Numeric(precision=10, scale=2), nullable=False)
-    is_free = Column(Boolean, default=False)
-    # nullable=True + SET NULL: course survives if faculty is deleted
-    faculty_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    price = Column(Numeric(10, 2), nullable=False, default=0)
+    is_free = Column(Boolean, nullable=False, default=False)
+    # nullable=True because ON DELETE SET NULL — course survives if faculty is deleted
+    faculty_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     thumbnail_url = Column(String(255), nullable=True)
-    is_deleted = Column(Boolean, default=False)  # soft delete
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    is_deleted = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False, default=func.now())
+    updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
 
-    # Relationships
-    # passive_deletes=True: SQLAlchemy won't load children on delete; DB handles cascades
+    # parent → passive (SET NULL handled by DB)
     faculty = relationship("User", back_populates="courses", foreign_keys=[faculty_id], passive_deletes=True)
-    enrollments = relationship("Enrollment", back_populates="course", cascade="all, delete-orphan")
-    payments = relationship("Payment", back_populates="course", cascade="all, delete-orphan")
-    lessons = relationship("Lesson", back_populates="course", cascade="all, delete-orphan")
-    exams = relationship("Exam", back_populates="course", cascade="all, delete-orphan")
-    notes = relationship("Note", back_populates="course", cascade="all, delete-orphan")
+    # parent → children (cascade ORM + DB)
+    enrollments = relationship("Enrollment", back_populates="course", cascade="all, delete-orphan", passive_deletes=True)
+    payments = relationship("Payment", back_populates="course", cascade="all, delete-orphan", passive_deletes=True)
+    lessons = relationship("Lesson", back_populates="course", cascade="all, delete-orphan", passive_deletes=True)
+    exams = relationship("Exam", back_populates="course", cascade="all, delete-orphan", passive_deletes=True)
+    notes = relationship("Note", back_populates="course", cascade="all, delete-orphan", passive_deletes=True)
 
     __table_args__ = (
         Index("idx_courses_faculty", "faculty_id"),
