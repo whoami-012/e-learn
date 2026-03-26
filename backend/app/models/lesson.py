@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Enum as SQLEnum, String, DateTime, Boolean, Integer, ForeignKey, func, Index
+from sqlalchemy import Column, Enum as SQLEnum, String, DateTime, Boolean, Integer, ForeignKey, func, Index, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -26,5 +26,7 @@ class Lesson(Base):
     course = relationship("Course", back_populates="lessons")
 
     __table_args__ = (
+        # Prevents two lessons in the same course from having the same order position
+        UniqueConstraint("course_id", "order_index", name="unique_lesson_order"),
         Index("idx_lessons_course", "course_id"),
     )

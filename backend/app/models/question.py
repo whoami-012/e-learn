@@ -16,7 +16,7 @@ class Question(Base):
     created_at = Column(DateTime, default=func.now())
 
     # Relationships
-    exam = relationship("Exam", back_populates="questions")
+    exam = relationship("Exam", back_populates="questions", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("idx_questions_exam", "exam_id"),

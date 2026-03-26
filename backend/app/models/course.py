@@ -13,13 +13,16 @@ class Course(Base):
     description = Column(Text, nullable=True)
     price = Column(Numeric(precision=10, scale=2), nullable=False)
     is_free = Column(Boolean, default=False)
+    # nullable=True + SET NULL: course survives if faculty is deleted
     faculty_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     thumbnail_url = Column(String(255), nullable=True)
+    is_deleted = Column(Boolean, default=False)  # soft delete
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     # Relationships
-    faculty = relationship("User", back_populates="courses", foreign_keys=[faculty_id])
+    # passive_deletes=True: SQLAlchemy won't load children on delete; DB handles cascades
+    faculty = relationship("User", back_populates="courses", foreign_keys=[faculty_id], passive_deletes=True)
     enrollments = relationship("Enrollment", back_populates="course", cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="course", cascade="all, delete-orphan")
     lessons = relationship("Lesson", back_populates="course", cascade="all, delete-orphan")

@@ -4,6 +4,8 @@ from sqlalchemy.orm import relationship
 import uuid
 from app.db.base import Base
 
+user_role_enum = SQLEnum("student", "faculty", "admin", name="user_role", create_type=True)
+
 
 class User(Base):
     __tablename__ = "users"
@@ -12,15 +14,23 @@ class User(Base):
     name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    role = Column(SQLEnum("student", "faculty", "admin", name="user_role"), nullable=False)
+    role = Column(user_role_enum, nullable=False)
     is_active = Column(Boolean, default=True)
+    is_deleted = Column(Boolean, default=False)  # soft delete
     created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     # Relationships
-    courses = relationship("Course", back_populates="faculty", foreign_keys="Course.faculty_id")
-    enrollments = relationship("Enrollment", back_populates="user")
-    payments = relationship("Payment", back_populates="user")
-    attempts = relationship("Attempt", back_populates="user")
+    # passive_deletes=True: let DB handle SET NULL on faculty_id, don't load courses on delete
+    courses = relationship(
+        "Course",
+        back_populates="faculty",
+        foreign_keys="Course.faculty_id",
+        passive_deletes=True,
+    )
+    enrollments = relationship("Enrollment", back_populates="user", passive_deletes=True)
+    payments = relationship("Payment", back_populates="user", passive_deletes=True)
+    attempts = relationship("Attempt", back_populates="user", passive_deletes=True)
 
     __table_args__ = (
         Index("idx_users_email", "email"),

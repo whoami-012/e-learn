@@ -13,6 +13,7 @@ class Exam(Base):
     title = Column(String(255), nullable=False)
     duration_minutes = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     # Relationships
     course = relationship("Course", back_populates="exams")

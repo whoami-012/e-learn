@@ -13,6 +13,7 @@ class Note(Base):
     title = Column(String(255), nullable=False)
     file_url = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     # Relationships
     course = relationship("Course", back_populates="notes")

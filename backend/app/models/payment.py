@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, Enum as SQLEnum, func, Index
+from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, Enum as SQLEnum, func, Index, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -13,7 +13,7 @@ class Payment(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     course_id = Column(UUID(as_uuid=True), ForeignKey("courses.id", ondelete="CASCADE"), nullable=False, index=True)
-    amount = Column(Integer, nullable=False)
+    amount = Column(Numeric(10, 2), nullable=False)
     razorpay_order_id = Column(String(255), nullable=False)
     razorpay_payment_id = Column(String(255), nullable=True)
     status = Column(payment_status_enum, nullable=False, default="pending")
