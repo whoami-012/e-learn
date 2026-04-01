@@ -11,6 +11,7 @@ from app.db.dependencies import get_db               # Fix #2: get_db lives here
 from app.repositories.user_repo import UserRepo
 
 security = HTTPBearer()
+security_optional = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
@@ -62,17 +63,15 @@ async def get_current_user(
     return user
 
 
-oauth2_scheme_optional = OAuth2PasswordBearer(
-    tokenUrl="auth/login",
-    auto_error=False
-)
-
-
 async def get_current_user_optional(
-    token: Optional[str] = Depends(oauth2_scheme_optional),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional),
     db: AsyncSession = Depends(get_db),
 ) -> Optional[User]:
     try:
+        if not credentials:
+            return None
+        
+        token = credentials.credentials
         if not token:
             return None
 
