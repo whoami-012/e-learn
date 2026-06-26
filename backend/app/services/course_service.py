@@ -72,3 +72,18 @@ async def update_course(
     await db.commit()
     await db.refresh(course)
     return course
+
+
+# 🔹 Delete Course (soft delete)
+async def delete_course(db: AsyncSession, course_id, user: User) -> None:
+    course = await get_course_by_id(db, course_id)
+
+    if user.role != "admin" and course.faculty_id != user.id:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to delete this course",
+        )
+
+    course.is_deleted = True
+    await db.commit()

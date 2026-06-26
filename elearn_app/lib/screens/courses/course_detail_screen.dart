@@ -8,6 +8,11 @@ import '../../core/constants/app_constants.dart';
 import 'edit_course_screen.dart';
 import 'notes_screen.dart';
 import '../lesson_player_screen.dart';
+import '../../services/course_service.dart';
+import 'mock_payment_screen.dart';
+import '../exams/exam_list_screen.dart';
+import '../exams/faculty_exam_management_screen.dart';
+import 'faculty_lesson_management_screen.dart';
 
 class CourseDetailScreen extends StatefulWidget {
   final String courseId;
@@ -42,7 +47,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+        ),
+      ),
     );
 
     try {
@@ -77,32 +86,37 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppColors.background,
       body: Consumer<CourseProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            );
           }
 
           if (provider.error != null) {
             return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.error_outline_rounded,
-                      size: 48, color: Colors.grey.shade300),
-                  const SizedBox(height: 12),
-                  Text(provider.error!),
-                  const SizedBox(height: 12),
-                  FilledButton.tonal(
-                    onPressed: () =>
-                        provider.fetchCourseById(widget.courseId),
-                    child: const Text('Retry'),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(provider.error!, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: AppSpacing.md),
+                    ElevatedButton(
+                      onPressed: () => provider.fetchCourseById(widget.courseId),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
               ),
             );
           }
@@ -117,34 +131,22 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             slivers: [
               // ── 1. Visual Header with Thumbnail ────────────────────────────
               SliverAppBar(
-                expandedHeight: 300,
+                expandedHeight: 280,
                 pinned: true,
                 elevation: 0,
-                backgroundColor: AppTheme.indigoAccent,
+                backgroundColor: AppColors.primary,
                 leading: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: CircleAvatar(
-                    backgroundColor: Colors.black.withOpacity(0.24),
+                    backgroundColor: Colors.black.withOpacity(0.35),
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 16),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
                 ),
                 flexibleSpace: FlexibleSpaceBar(
                   stretchModes: const [StretchMode.zoomBackground],
-                  titlePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  title: Text(
-                    course.title,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      shadows: [Shadow(color: Colors.black.withOpacity(0.45), blurRadius: 8)],
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -164,11 +166,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Colors.black.withOpacity(0.38),
+                              Colors.black.withOpacity(0.2),
                               Colors.transparent,
-                              Colors.black.withOpacity(0.87),
+                              Colors.black.withOpacity(0.65),
                             ],
-                            stops: const [0.0, 0.4, 1.0],
+                            stops: const [0.0, 0.5, 1.0],
                           ),
                         ),
                       ),
@@ -179,66 +181,168 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
               // ── 2. Course Content Section ──────────────────────────────────
               SliverToBoxAdapter(
-                child: Transform.translate(
-                  offset: const Offset(0, -20),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: AppTheme.background,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXL)),
-                    ),
-                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ── Price Badge & Category ───────────────────────────
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: course.isFree ? Colors.green.shade50 : AppTheme.indigoAccent.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                course.isFree ? '🎓 FREE' : '₹${course.price.toStringAsFixed(0)}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                  color: course.isFree ? Colors.green.shade700 : AppTheme.indigoAccent,
-                                ),
+                child: Container(
+                  color: AppColors.background,
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.md, AppSpacing.xl),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Course Title
+                      Text(
+                        course.title,
+                        style: textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.sm),
+
+                      // ── Price Badge & Category ───────────────────────────
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: course.isFree ? AppColors.pastelMint : AppColors.primarySoft,
+                              borderRadius: BorderRadius.circular(AppRadius.pill),
+                            ),
+                            child: Text(
+                              course.isFree ? '🎓 FREE' : '₹${course.price.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: course.isFree ? Colors.green.shade700 : AppColors.primary,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(20),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(AppRadius.pill),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Text(
+                              'Development',
+                              style: textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textSecondary,
                               ),
-                              child: Text(
-                                'Development', // Placeholder category
-                                style: AppTheme.bodySmall.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // ── Key Metrics Banner ─────────────────────────────────
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
+                          border: Border.all(color: AppColors.border),
+                          boxShadow: AppTheme.miniShadow,
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _MetricItem(icon: Icons.star_rounded, label: '4.8', subLabel: 'Rating', iconColor: AppColors.warning),
+                            _MetricItem(icon: Icons.access_time_filled_rounded, label: '6 Weeks', subLabel: 'Duration', iconColor: AppColors.blue),
+                            _MetricItem(icon: Icons.play_lesson_rounded, label: '12 Chapters', subLabel: 'Modules', iconColor: AppColors.primary),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // ── Description ──────────────────────────────────────
+                      Text(
+                        'About this course',
+                        style: textTheme.titleMedium?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        course.description,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontSize: 14,
+                          height: 1.6,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // ── Instructor Card ──────────────────────────────────
+                      Text(
+                        'Your Instructor',
+                        style: textTheme.titleMedium?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.medium),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              height: 48,
+                              width: 48,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: AppTheme.avatarGradient,
+                              ),
+                              alignment: Alignment.center,
+                              child: const Text(
+                                'AS',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Dr. Alan Smith',
+                                    style: TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'Senior Software Engineer & Educator',
+                                    style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
+                      ),
 
-                        const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.xl),
 
-                        // ── Description ──────────────────────────────────────
-                        const Text('About this course', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 12),
-                        Text(
-                          course.description,
-                          style: AppTheme.bodySmall.copyWith(fontSize: 15, height: 1.6, color: Colors.grey.shade700),
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        // ── Lock/Enrollment State ───────────────────────────
-                        _buildActionSection(context, course),
-                      ],
-                    ),
+                      // ── Lock/Enrollment Action State ───────────────────────
+                      _buildActionSection(context, course),
+                    ],
                   ),
                 ),
               ),
@@ -269,34 +373,107 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         children: [
           SizedBox(
             width: double.infinity,
-            height: 56,
-            child: FilledButton.icon(
+            height: 52,
+            child: ElevatedButton.icon(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => EditCourseScreen(courseId: course.id)),
                 );
               },
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.indigoAccent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLG)),
-              ),
               icon: const Icon(Icons.edit_document),
-              label: const Text('Edit Course Details', style: TextStyle(fontWeight: FontWeight.bold)),
+              label: const Text('Edit Course Details'),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           SizedBox(
             width: double.infinity,
-            height: 56,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FacultyLessonManagementScreen(
+                      courseId: course.id,
+                      courseTitle: course.title,
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              icon: const Icon(Icons.video_call_rounded, color: Colors.white),
+              label: const Text('Manage Recorded Classes', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => FacultyExamManagementScreen(courseId: course.id)),
+                );
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.blue),
+              icon: const Icon(Icons.quiz_rounded, color: Colors.white),
+              label: const Text('Manage Exams', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: const Text('Delete Course?'),
+                    content: const Text('This will permanently delete the course and all its materials.'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (confirm == true && mounted) {
+                  try {
+                    await CourseService.deleteCourse(course.id);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Course deleted successfully')));
+                      Navigator.pop(context); // Go back after deletion
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+                    }
+                  }
+                }
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: const BorderSide(color: AppColors.error, width: 1.5),
+              ),
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Delete Course'),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
             child: OutlinedButton.icon(
               onPressed: () => _onWatchLessons(context),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppTheme.indigoAccent, width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLG)),
-              ),
-              icon: const Icon(Icons.play_circle_outline, color: AppTheme.indigoAccent),
-              label: const Text('Preview Course Lessons', style: TextStyle(color: AppTheme.indigoAccent, fontWeight: FontWeight.bold)),
+              icon: const Icon(Icons.play_circle_outline),
+              label: const Text('Preview Course Lessons'),
             ),
           ),
         ],
@@ -309,21 +486,21 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       children: [
         if (!course.isFree && !isEnrolled)
           Container(
-            margin: const EdgeInsets.only(bottom: 24),
-            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: Colors.amber.shade50,
-              borderRadius: BorderRadius.circular(AppTheme.radiusMD),
-              border: Border.all(color: Colors.amber.shade100),
+              color: AppColors.pastelYellow,
+              borderRadius: BorderRadius.circular(AppRadius.medium),
+              border: Border.all(color: AppColors.warning.withOpacity(0.3)),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                Icon(Icons.lock_person_rounded, color: Colors.amber.shade700),
-                const SizedBox(width: 12),
+                Icon(Icons.lock_person_rounded, color: AppColors.secondary),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
                     'Enroll to unlock all modules and resources.',
-                    style: TextStyle(color: Colors.amber.shade900, fontSize: 13, fontWeight: FontWeight.w500),
+                    style: TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -332,38 +509,61 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         
         if (isEnrolled) ...[
           const Center(
-            child: Text('🎉 You are enrolled!', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16)),
+            child: Text('🎉 You are enrolled in this course!', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 15)),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           _buildActionBtn(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NotesScreen(courseId: course.id))),
             icon: Icons.sticky_note_2_rounded,
             label: 'Open Course Materials',
             isPrimary: true,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           _buildActionBtn(
             onPressed: () => _onWatchLessons(context),
             icon: Icons.play_circle_filled_rounded,
             label: 'Watch Course Lessons',
             isPrimary: false,
           ),
+          const SizedBox(height: AppSpacing.sm),
+          _buildActionBtn(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ExamListScreen(
+                    courseId: course.id,
+                    courseTitle: course.title,
+                  ),
+                ),
+              );
+            },
+            icon: Icons.assignment_rounded,
+            label: 'Take Exams',
+            isPrimary: false,
+          ),
         ] else if (enrollment.isLoading) ...[
-          const Center(child: CircularProgressIndicator())
+          const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary)))
         ] else ...[
           _buildActionBtn(
             onPressed: () async {
               if (course.isFree) {
                 await context.read<EnrollmentProvider>().enroll(course.id);
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment system coming soon!')));
+                final success = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => MockPaymentScreen(course: course)),
+                );
+                if (success == true && mounted) {
+                  // Enrollment is handled in MockPaymentScreen
+                }
               }
             },
             icon: course.isFree ? Icons.school_rounded : Icons.shopping_bag_rounded,
             label: course.isFree ? 'Enroll Now for Free' : 'Purchase Course',
             isPrimary: true,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           _buildActionBtn(
             onPressed: () => _onWatchLessons(context),
             icon: Icons.play_circle_filled_rounded,
@@ -382,26 +582,50 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     required bool isPrimary,
   }) {
     return SizedBox(
-      height: 56,
+      height: 52,
       child: isPrimary
-          ? FilledButton.icon(
+          ? ElevatedButton.icon(
               onPressed: onPressed,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.indigoAccent,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLG)),
-              ),
               icon: Icon(icon),
-              label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+              label: Text(label),
             )
           : OutlinedButton.icon(
               onPressed: onPressed,
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppTheme.indigoAccent, width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLG)),
-              ),
-              icon: Icon(icon, color: AppTheme.indigoAccent),
-              label: Text(label, style: const TextStyle(color: AppTheme.indigoAccent, fontWeight: FontWeight.bold)),
+              icon: Icon(icon),
+              label: Text(label),
             ),
+    );
+  }
+}
+
+class _MetricItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subLabel;
+  final Color iconColor;
+
+  const _MetricItem({
+    required this.icon,
+    required this.label,
+    required this.subLabel,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: iconColor, size: 24),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
+        ),
+        Text(
+          subLabel,
+          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+        ),
+      ],
     );
   }
 }

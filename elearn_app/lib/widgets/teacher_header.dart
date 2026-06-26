@@ -15,57 +15,73 @@ class TeacherHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
-      color: AppTheme.background,
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+      color: AppColors.background,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // ── Greeting & Avatar ──────────────────────────────────────────
-          Row(
-            children: [
-              GestureDetector(
-                onTap: onProfileTap,
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF818CF8), Color(0xFFA78BFA)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+          Expanded(
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: onProfileTap,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.avatarGradient,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF818CF8).withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+                    alignment: Alignment.center,
+                    child: Text(
+                      userName.isNotEmpty ? userName[0].toUpperCase() : 'T',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm + 4),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Hello, $userName 👋',
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const Text(
+                        'Good Morning',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.person_rounded, color: Colors.white, size: 24),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hello, $userName 👋',
-                    style: AppTheme.h3.copyWith(fontSize: 16),
-                  ),
-                  Text(
-                    'Good Morning',
-                    style: AppTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
 
           // ── Action Icons ───────────────────────────────────────────────
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Language Switcher
               _HeaderActionButton(
@@ -73,7 +89,7 @@ class TeacherHeader extends StatelessWidget {
                 label: 'EN',
                 onTap: () {},
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               // Notifications
               Stack(
                 children: [
@@ -82,15 +98,15 @@ class TeacherHeader extends StatelessWidget {
                     onTap: onNotificationTap,
                   ),
                   Positioned(
-                    top: 0,
-                    right: 0,
+                    top: 2,
+                    right: 2,
                     child: Container(
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF87171),
+                        color: AppColors.error,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.background, width: 2),
+                        border: Border.all(color: AppColors.background, width: 1.5),
                       ),
                     ),
                   ),
@@ -119,24 +135,28 @@ class _HeaderActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+      borderRadius: BorderRadius.circular(AppRadius.pill),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: label != null ? 12 : 8, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: label != null ? 12 : 10, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-          border: Border.all(color: AppTheme.borderLight),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+          border: Border.all(color: AppColors.border),
           boxShadow: AppTheme.miniShadow,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: AppTheme.textSecondary),
+            Icon(icon, size: 16, color: AppColors.textSecondary),
             if (label != null) ...[
               const SizedBox(width: 4),
               Text(
                 label!,
-                style: AppTheme.labelSmall.copyWith(color: AppTheme.textPrimary),
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
               ),
             ],
           ],

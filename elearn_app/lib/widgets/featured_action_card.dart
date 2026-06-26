@@ -19,50 +19,46 @@ class FeaturedActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       child: Container(
-        height: 180,
+        height: 170,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFFF5F3FF), Color(0xFFFDF2F8)],
+            colors: [AppColors.pastelPurple, AppColors.surface],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFF3E8FF), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFF3E8FF).withOpacity(0.5),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppTheme.softShadow,
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
             // ── Background Decoration ────────────────────────────────────
             Positioned(
-              bottom: 0,
-              right: 0,
+              bottom: -20,
+              right: -20,
               child: Container(
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [const Color(0xFFE9D5FF).withOpacity(0.3), const Color(0xFFFBCFE8).withOpacity(0.3)],
+                    colors: [AppColors.primarySoft.withOpacity(0.3), AppColors.pastelPink.withOpacity(0.2)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(120)),
+                  shape: BoxShape.circle,
                 ),
               ),
             ),
 
             // ── Content ──────────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -70,45 +66,52 @@ class FeaturedActionCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Today's Task",
-                            style: AppTheme.bodySmall.copyWith(
-                              color: const Color(0xFF9333EA),
-                              fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Today's Task",
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                                letterSpacing: 0.5,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            title,
-                            style: AppTheme.h3.copyWith(fontSize: 18),
-                          ),
-                        ],
+                            const SizedBox(height: 2),
+                            Text(
+                              title,
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                                fontSize: 16,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: AppSpacing.sm),
                       // Play Button
                       GestureDetector(
                         onTap: onPlayTap,
                         child: Container(
-                          width: 56,
-                          height: 56,
+                          width: 48,
+                          height: 48,
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFA78BFA), Color(0xFFF472B6)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            gradient: AppTheme.primaryGradient,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFD8B4FE).withOpacity(0.4),
-                                blurRadius: 15,
-                                offset: const Offset(0, 8),
+                                color: AppColors.primary.withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 32),
+                          child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 28),
                         ),
                       ),
                     ],
@@ -120,15 +123,18 @@ class FeaturedActionCard extends StatelessWidget {
                       _MetaBadge(
                         label: '$lessonsCount',
                         suffix: 'lessons',
-                        bgColor: const Color(0xFFF3E8FF),
-                        textColor: const Color(0xFF9333EA),
+                        bgColor: AppColors.primarySoft,
+                        textColor: AppColors.primary,
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: AppSpacing.md),
                       Row(
                         children: [
-                          const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF9CA3AF)),
-                          const SizedBox(width: 6),
-                          Text(duration, style: AppTheme.bodySmall),
+                          const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textSecondary),
+                          const SizedBox(width: 4),
+                          Text(
+                            duration,
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          ),
                         ],
                       ),
                     ],
@@ -140,30 +146,32 @@ class FeaturedActionCard extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Progress', style: AppTheme.labelSmall),
-                          Text('${(progress * 100).toInt()}%',
-                              style: AppTheme.labelSmall.copyWith(
-                                color: const Color(0xFF9333EA),
-                              )),
+                          const Text('Progress', style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
+                          Text(
+                            '${(progress * 100).toInt()}%',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Container(
                         width: double.infinity,
                         height: 6,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF3E8FF),
-                          borderRadius: BorderRadius.circular(10),
+                          color: AppColors.border,
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
                         ),
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
                           widthFactor: progress,
                           child: Container(
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFA78BFA), Color(0xFFF472B6)],
-                              ),
-                              borderRadius: BorderRadius.circular(10),
+                              gradient: AppTheme.primaryGradient,
+                              borderRadius: BorderRadius.circular(AppRadius.pill),
                             ),
                           ),
                         ),
@@ -198,8 +206,8 @@ class _MetaBadge extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 24,
-          height: 24,
+          width: 22,
+          height: 22,
           decoration: BoxDecoration(
             color: bgColor,
             shape: BoxShape.circle,
@@ -207,12 +215,12 @@ class _MetaBadge extends StatelessWidget {
           child: Center(
             child: Text(
               label,
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor),
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: textColor),
             ),
           ),
         ),
         const SizedBox(width: 6),
-        Text(suffix, style: AppTheme.bodySmall),
+        Text(suffix, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
       ],
     );
   }

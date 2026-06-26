@@ -3,6 +3,8 @@ import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 import '../../core/storage/token_storage.dart';
 
+import '../../theme/app_theme.dart';
+
 class PdfViewerScreen extends StatefulWidget {
   final String title;
   final String pdfUrl;
@@ -43,8 +45,9 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: AppColors.border)),
       ),
       backgroundColor: Colors.grey.shade100,
       body: _isLoading

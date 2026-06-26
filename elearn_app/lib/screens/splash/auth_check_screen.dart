@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/storage/token_storage.dart';
 import '../../providers/user_provider.dart';
+import '../../theme/app_theme.dart';
 import '../auth/login_screen.dart';
 import '../home/home_screen.dart';
 import '../teacher_home_screen.dart';
@@ -71,54 +72,78 @@ class _SplashView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: color.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFF9F8FD), AppColors.pastelPurple],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Beautiful logo container with soft shadow and white surface
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.large),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.12),
+                      blurRadius: 24,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.school_rounded,
+                    size: 52,
+                    color: AppColors.primary,
+                  ),
+                ),
               ),
-              child: Icon(Icons.school_rounded, size: 48, color: color.primary),
-            ),
 
-            const SizedBox(height: 20),
+              const SizedBox(height: 28),
 
-            Text(
-              'E-Learn',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: color.primary,
-                letterSpacing: 1,
+              Text(
+                'LearnFlow',
+                style: textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
               ),
-            ),
 
-            const SizedBox(height: 8),
+              const SizedBox(height: 6),
 
-            Text(
-              'Loading your session...',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
-            ),
-
-            const SizedBox(height: 32),
-
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: color.primary,
+              Text(
+                'Your premium learning companion',
+                style: textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 48),
+
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

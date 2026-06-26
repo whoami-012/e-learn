@@ -28,73 +28,86 @@ class AnalyticsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: stat.bgColor,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: stat.shadowColor.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppTheme.miniShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Icon Container
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              gradient: stat.gradient,
-              borderRadius: BorderRadius.circular(13),
-              boxShadow: [
-                BoxShadow(
-                  color: stat.shadowColor.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Icon(stat.icon, color: Colors.white, size: 20),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            stat.label,
-            style: AppTheme.bodySmall.copyWith(color: const Color(0xFF4B5563)),
-          ),
-          const SizedBox(height: 6),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                stat.value,
-                style: AppTheme.h2.copyWith(fontSize: 18),
-              ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD1FAE5), // emerald-100
-                  borderRadius: BorderRadius.circular(20),
+                  gradient: stat.gradient,
+                  borderRadius: BorderRadius.circular(AppRadius.small),
+                  boxShadow: [
+                    BoxShadow(
+                      color: stat.shadowColor.withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Icon(stat.icon, color: Colors.white, size: 18),
+              ),
+              // Percentage change chip
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.pastelMint,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.arrow_upward_rounded, size: 10, color: Color(0xFF059669)),
+                    const Icon(Icons.trending_up_rounded, size: 10, color: Colors.green),
                     const SizedBox(width: 2),
                     Text(
                       stat.change,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF047857), // emerald-700
+                        color: Colors.green.shade800,
                       ),
                     ),
                   ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                stat.label,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                stat.value,
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  fontSize: 20,
                 ),
               ),
             ],

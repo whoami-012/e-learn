@@ -8,8 +8,8 @@ import 'package:http/http.dart' as http;
 
 import '../core/constants/app_constants.dart';
 import '../core/exceptions/auth_exception.dart';
-import '../core/storage/token_storage.dart';
-import '../models/course.dart'; // Course, CourseCreate, CourseUpdate
+import '../core/network/http_client.dart';
+import '../models/course.dart';
 import '../models/lesson.dart';
 
 
@@ -61,9 +61,8 @@ class CourseService {
 
   static Future<List<Course>> getCourses() async {
     try {
-      final response = await http.get(
+      final response = await ApiClient.get(
         Uri.parse(AppConstants.coursesEndpoint),
-        headers: _headers,
       );
       final body = jsonDecode(response.body);
       final list = body as List<dynamic>;
@@ -81,9 +80,8 @@ class CourseService {
 
   static Future<Course> getCourseById(String id) async {
     try {
-      final response = await http.get(
+      final response = await ApiClient.get(
         Uri.parse('${AppConstants.coursesEndpoint}/$id'),
-        headers: _headers,
       );
       final data = _handleResponse(response);
       return Course.fromJson(data);
@@ -99,14 +97,10 @@ class CourseService {
   // ── GET /courses/{id}/lessons ────────────────────────────────────────────────
 
   static Future<List<Lesson>> getLessonsForCourse(String courseId) async {
-    final token = await TokenStorage.getAccessToken();
     try {
-      final response = await http.get(
+      final response = await ApiClient.get(
         Uri.parse('${AppConstants.coursesEndpoint}/$courseId/lessons/youtube'),
-        headers: {
-          ..._headers,
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
+        withAuth: true,
       );
 
       if (response.statusCode == 200) {
@@ -132,20 +126,45 @@ class CourseService {
     }
   }
 
+  // ── POST /courses/{courseId}/lessons/youtube (faculty/admin only) ────────────
+
+  static Future<Lesson> createYoutubeLesson({
+    required String courseId,
+    required String title,
+    required String videoId,
+    required int orderIndex,
+    required bool isPreview,
+  }) async {
+    try {
+      final response = await ApiClient.post(
+        Uri.parse('${AppConstants.coursesEndpoint}/$courseId/lessons/youtube'),
+        withAuth: true,
+        body: {
+          'title': title,
+          'video_id': videoId,
+          'order_index': orderIndex,
+          'is_preview': isPreview,
+        },
+      );
+      final body = _handleResponse(response);
+      return Lesson.fromJson(body);
+    } on AuthException {
+      rethrow;
+    } on SocketException {
+      throw const NetworkException();
+    } on http.ClientException {
+      throw const NetworkException();
+    }
+  }
+
   // ── POST /courses/ (faculty only) ───────────────────────────────────────────
 
   static Future<Course> createCourse(CourseCreate data) async {
-    final token = await TokenStorage.getAccessToken();
-    if (token == null) throw const InvalidCredentialsException();
-
     try {
-      final response = await http.post(
+      final response = await ApiClient.post(
         Uri.parse(AppConstants.coursesEndpoint),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(data.toJson()),
+        withAuth: true,
+        body: data.toJson(),
       );
       final body = _handleResponse(response);
       return Course.fromJson(body);
@@ -161,17 +180,11 @@ class CourseService {
   // ── PATCH /courses/{id} (faculty/admin only) ─────────────────────────────────
 
   static Future<Course> updateCourse(String id, CourseUpdate data) async {
-    final token = await TokenStorage.getAccessToken();
-    if (token == null) throw const InvalidCredentialsException();
-
     try {
-      final response = await http.patch(
+      final response = await ApiClient.patch(
         Uri.parse('${AppConstants.coursesEndpoint}/$id'),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(data.toJson()),
+        withAuth: true,
+        body: data.toJson(),
       );
       final body = _handleResponse(response);
       return Course.fromJson(body);
@@ -183,4 +196,26 @@ class CourseService {
       throw const NetworkException();
     }
   }
+
+  // ── DELETE /courses/{id} (faculty/admin only) ────────────────────────────────
+
+  static Future<void> deleteCourse(String id) async {
+    try {
+      final response = await ApiClient.delete(
+        Uri.parse('${AppConstants.coursesEndpoint}/$id'),
+        withAuth: true,
+      );
+      
+      if (response.statusCode != 204) {
+        _handleResponse(response);
+      }
+    } on AuthException {
+      rethrow;
+    } on SocketException {
+      throw const NetworkException();
+    } on http.ClientException {
+      throw const NetworkException();
+    }
+  }
 }
+

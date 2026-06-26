@@ -7,6 +7,7 @@ import '../../models/note.dart';
 import '../../providers/enrollment_provider.dart';
 import '../../providers/note_provider.dart';
 import 'pdf_viewer_screen.dart';
+import '../../theme/app_theme.dart';
 
 class NotesScreen extends StatefulWidget {
   final String courseId;
@@ -81,48 +82,77 @@ class _NotesScreenState extends State<NotesScreen> {
   Widget build(BuildContext context) {
     final enrollmentProvider = context.watch<EnrollmentProvider>();
     final isEnrolled = enrollmentProvider.isEnrolled;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Notes & Resources'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
+        title: const Text('Course Materials'),
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: AppColors.border)),
       ),
-      backgroundColor: Colors.grey.shade50,
       body: Consumer<NoteProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+            );
           }
 
           if (provider.error != null) {
             return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.error_outline_rounded,
-                      size: 48, color: Colors.grey.shade400),
-                  const SizedBox(height: 12),
-                  Text(provider.error!),
-                  const SizedBox(height: 12),
-                  FilledButton.tonal(
-                    onPressed: () =>
-                        provider.fetchNotes(widget.courseId),
-                    child: const Text('Retry'),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(provider.error!, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: AppSpacing.md),
+                    ElevatedButton(
+                      onPressed: () => provider.fetchNotes(widget.courseId),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
               ),
             );
           }
 
           if (provider.notes.isEmpty) {
-            return const Center(child: Text('No notes available.'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.folder_open_rounded, size: 52, color: AppColors.textSecondary),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'No resources available',
+                      style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    const Text(
+                      'No notes or documents have been added to this course yet.',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.all(16),
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.all(AppSpacing.md),
             itemCount: provider.notes.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.sm),
             itemBuilder: (context, index) {
               final note = provider.notes[index];
               final isLocked = !note.isFree && !isEnrolled;
@@ -130,47 +160,10 @@ class _NotesScreenState extends State<NotesScreen> {
               return Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.grey.shade200),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
+                  side: const BorderSide(color: AppColors.border),
                 ),
-                child: ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  leading: CircleAvatar(
-                    backgroundColor: isLocked
-                        ? Colors.grey.shade100
-                        : Theme.of(context).colorScheme.primaryContainer,
-                    child: Icon(
-                      isLocked
-                          ? Icons.lock_rounded
-                          : (note.fileUrl != null
-                              ? Icons.picture_as_pdf_rounded
-                              : Icons.text_snippet_rounded),
-                      color: isLocked
-                          ? Colors.grey.shade500
-                          : Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  title: Text(
-                    note.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: isLocked ? Colors.grey.shade600 : Colors.black87,
-                    ),
-                  ),
-                  subtitle: Text(
-                    isLocked
-                        ? 'Buy course to unlock'
-                        : (note.isFree ? 'Free Preview' : 'Enrollment Access'),
-                    style: TextStyle(
-                      color: isLocked ? Colors.red.shade300 : Colors.green.shade600,
-                      fontSize: 12,
-                    ),
-                  ),
-                  trailing: isLocked
-                      ? null
-                      : Icon(Icons.chevron_right_rounded,
-                          color: Colors.grey.shade400),
+                child: InkWell(
                   onTap: () {
                     if (isLocked) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -206,6 +199,64 @@ class _NotesScreenState extends State<NotesScreen> {
                       _showNoteContent(context, note);
                     }
                   },
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Row(
+                      children: [
+                        // Left Icon indicator
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isLocked ? AppColors.surfaceMuted : AppColors.primarySoft,
+                            borderRadius: BorderRadius.circular(AppRadius.small),
+                          ),
+                          child: Icon(
+                            isLocked
+                                ? Icons.lock_rounded
+                                : (note.fileUrl != null
+                                    ? Icons.picture_as_pdf_rounded
+                                    : Icons.text_snippet_rounded),
+                            color: isLocked ? AppColors.textSecondary : AppColors.primary,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        // Note Title & Lock description
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                note.title,
+                                style: textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: isLocked ? AppColors.textSecondary : AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isLocked
+                                    ? 'Purchase course to unlock'
+                                    : (note.isFree ? 'Free Preview' : 'Enrollment Access'),
+                                style: TextStyle(
+                                  color: isLocked ? AppColors.error : Colors.green.shade600,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (!isLocked)
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            color: AppColors.textSecondary,
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               );
             },

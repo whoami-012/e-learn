@@ -8,6 +8,7 @@ Responsibilities:
 - Configures CORS for frontend access
 """
 
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -17,6 +18,11 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.api import api_router
 from app.db.init_db import init_db
+
+# ALLOWED_ORIGINS: comma-separated list set via env var in production.
+# Falls back to localhost origins for local development.
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
+ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
 
 # ---------------------------------------------------------------------------
@@ -54,6 +60,7 @@ app = FastAPI(
     docs_url="/docs",       # Swagger UI
     redoc_url="/redoc",     # ReDoc UI
     lifespan=lifespan,
+    redirect_slashes=False, # Prevent 307 redirects for POST without trailing slash
 )
 
 
@@ -63,10 +70,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",    # Local React / Next.js frontend
-        "http://localhost:5173",    # Local Vite frontend
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,         # Required for cookies / Auth headers
     allow_methods=["*"],            # Allow all HTTP methods
     allow_headers=["*"],            # Allow all headers including Authorization

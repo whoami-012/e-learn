@@ -53,9 +53,10 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<UserProvider>().user;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Consumer<TeacherDashboardProvider>(
           builder: (context, provider, _) {
@@ -92,13 +93,16 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                     ),
 
                     // ── 5. Section: Let's teach ───────────────────────────
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(24, 12, 24, 16),
-                      child: Text("Let's teach", style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF111827),
-                      )),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
+                      child: Text(
+                        "Let's teach",
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
                     ),
 
                     // ── 6. Category Chips ─────────────────────────────────
@@ -107,13 +111,13 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                       onCategorySelected: (category) {},
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.sm),
 
                     // ── 7. Course List ────────────────────────────────────
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                       child: provider.isLoading && provider.courses.isEmpty
-                          ? const Center(child: CircularProgressIndicator())
+                          ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary)))
                           : provider.courses.isEmpty
                               ? _buildEmptyState(provider, user?.id)
                               : Column(
@@ -139,26 +143,29 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                     ),
 
                     // ── 8. Analytics Section ──────────────────────────────
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(24, 32, 24, 16),
-                      child: Text("Analytics", style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF111827),
-                      )),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.md, AppSpacing.sm),
+                      child: Text(
+                        "Analytics",
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+                      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.xxl),
                       child: GridView.builder(
                         padding: EdgeInsets.zero,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1.1,
+                          crossAxisSpacing: AppSpacing.sm + 4,
+                          mainAxisSpacing: AppSpacing.sm + 4,
+                          childAspectRatio: 1.25,
                         ),
                         itemCount: styledStats.length,
                         itemBuilder: (context, index) {
@@ -180,14 +187,16 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
             MaterialPageRoute(builder: (_) => const CreateCourseScreen()),
           ).then((_) {
             if (mounted) {
+              final user = context.read<UserProvider>().user;
               context.read<TeacherDashboardProvider>().fetchCourses(user?.id);
             }
           });
         },
-        backgroundColor: AppTheme.indigoAccent,
-        elevation: 4,
+        backgroundColor: AppColors.primary,
+        elevation: 2,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('New Course', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
       ),
     );
   }
@@ -239,14 +248,14 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 40),
-          Icon(Icons.school_outlined, size: 64, color: Colors.grey.shade300),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.xl),
+          const Icon(Icons.school_outlined, size: 52, color: AppColors.textSecondary),
+          const SizedBox(height: AppSpacing.md),
           Text(
             provider.error ?? 'No courses yet',
-            style: TextStyle(color: Colors.grey.shade500),
+            style: const TextStyle(color: AppColors.textSecondary),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.sm),
           TextButton(
             onPressed: () => provider.fetchCourses(userId),
             child: const Text('Refresh'),

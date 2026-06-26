@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 
 import '../core/constants/app_constants.dart';
 import '../core/exceptions/auth_exception.dart';
+import '../core/network/http_client.dart';
 import '../core/storage/token_storage.dart';
 
 // ── Response models ────────────────────────────────────────────────────────────
@@ -67,7 +68,7 @@ class UserProfile {
 class AuthService {
   AuthService._();
 
-  static const _headers = {'Content-Type': 'application/json'};
+  // Base headers are handled by ApiClient (includes ngrok bypass automatically)
 
   // ── Helper: parse response ─────────────────────────────────────────────────
 
@@ -135,10 +136,9 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final response = await http.post(
+      final response = await ApiClient.post(
         Uri.parse(AppConstants.loginEndpoint),
-        headers: _headers,
-        body: jsonEncode({'email': email, 'password': password}),
+        body: {'email': email, 'password': password},
       );
 
       final data = _handleResponse(response);
@@ -178,14 +178,13 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final response = await http.post(
+      final response = await ApiClient.post(
         Uri.parse(AppConstants.registerEndpoint),
-        headers: _headers,
-        body: jsonEncode({
+        body: {
           'name':     name,
           'email':    email.toLowerCase().trim(),
           'password': password,
-        }),
+        },
       );
 
       final data = _handleResponse(response);
@@ -212,10 +211,9 @@ class AuthService {
     }
 
     try {
-      final response = await http.post(
+      final response = await ApiClient.post(
         Uri.parse(AppConstants.refreshEndpoint),
-        headers: _headers,
-        body: jsonEncode({'refresh_token': refreshToken}),
+        body: {'refresh_token': refreshToken},
       );
 
       final data = _handleResponse(response);
@@ -247,12 +245,9 @@ class AuthService {
     }
 
     try {
-      final response = await http.get(
+      final response = await ApiClient.get(
         Uri.parse(AppConstants.meEndpoint),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $accessToken',
-        },
+        withAuth: true,
       );
 
       final data = _handleResponse(response);

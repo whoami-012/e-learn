@@ -9,18 +9,14 @@ import '../auth/login_screen.dart';
 import '../courses/course_list_screen.dart';
 import '../courses/course_detail_screen.dart';
 import '../courses/create_course_screen.dart';
+import '../admin/admin_dashboard_screen.dart';
+import '../../theme/app_theme.dart';
 
-/// Converts a relative backend path (e.g. '/static/thumbnails/abc.jpg')
-/// to a full URL. Leaves already-absolute URLs unchanged.
 String _fullImageUrl(String? path) {
   if (path == null || path.isEmpty) return '';
   if (path.startsWith('http')) return path;
   return '${AppConstants.serverBase}$path';
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  HOME SCREEN
-// ─────────────────────────────────────────────────────────────────────────────
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,31 +30,27 @@ class _HomeScreenState extends State<HomeScreen> {
     {
       'icon': Icons.code_rounded,
       'label': 'Development',
-      'color': Color(0xFF5C6BC0),
+      'color': AppColors.blue,
+      'bgColor': AppColors.pastelBlue,
     },
     {
       'icon': Icons.security_rounded,
       'label': 'Cybersecurity',
-      'color': Color(0xFFE53935),
+      'color': AppColors.error,
+      'bgColor': AppColors.pastelPink,
     },
     {
       'icon': Icons.design_services_rounded,
       'label': 'Design',
-      'color': Color(0xFF8E24AA),
+      'color': AppColors.primary,
+      'bgColor': AppColors.pastelPurple,
     },
     {
       'icon': Icons.business_center_rounded,
       'label': 'Business',
-      'color': Color(0xFFF4511E),
+      'color': AppColors.warning,
+      'bgColor': AppColors.pastelYellow,
     },
-  ];
-
-  static const _cardColors = [
-    Color(0xFF5C6BC0),
-    Color(0xFF26A69A),
-    Color(0xFF8E24AA),
-    Color(0xFFF4511E),
-    Color(0xFF00897B),
   ];
 
   @override
@@ -94,10 +86,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final user = context.watch<UserProvider>().user;
     final courseState = context.watch<CourseProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: AppColors.background,
       floatingActionButton: (user?.role == 'faculty' || user?.role == 'admin')
           ? FloatingActionButton.extended(
               onPressed: () {
@@ -106,42 +98,36 @@ class _HomeScreenState extends State<HomeScreen> {
                   MaterialPageRoute(builder: (_) => const CreateCourseScreen()),
                 );
               },
-              icon: const Icon(Icons.add_circle_outline),
-              label: const Text('Add Course'),
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
+              label: const Text('Add Course', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
             )
           : null,
       body: RefreshIndicator(
         onRefresh: () => context.read<CourseProvider>().fetchCourses(),
         child: CustomScrollView(
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
           slivers: [
             // ── 1. Header ─────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: _Header(
                 name: user?.name,
                 initials: _getInitials(user?.name),
-                color: colorScheme.primary,
                 onLogout: _logout,
               ),
             ),
 
-            // ── 2. Continue Learning ───────────────────────────────────────
+            const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.sm)),
+
+            // ── 2. Hero Card / Continue Learning ───────────────────────────
             if (context.watch<UserProvider>().role != 'faculty' && context.watch<UserProvider>().role != 'admin') ...[
               SliverToBoxAdapter(
-                child: _SectionTitle(
-                  title: 'Continue Learning',
-                  onSeeAll: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CourseListScreen()),
-                  ),
-                ),
-              ),
-
-              SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                   child: courseState.isLoading
-                      ? const _ShimmerBox(height: 130, borderRadius: 16)
-                      : const _ContinueLearningEmpty(),
+                      ? const _ShimmerBox(height: 140, borderRadius: AppRadius.large)
+                      : _buildHeroSection(courseState.courses),
                 ),
               ),
             ],
@@ -159,16 +145,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 210,
+                height: 220,
                 child: courseState.isLoading
                     ? _buildRecommendedShimmer()
                     : courseState.courses.isEmpty
-                    ? const _EmptyHorizontalCourses()
-                    : _buildRecommendedList(courseState.courses, context),
+                        ? const _EmptyHorizontalCourses()
+                        : _buildRecommendedList(courseState.courses, context),
               ),
             ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
             // ── 4. Categories ──────────────────────────────────────────────
             SliverToBoxAdapter(
@@ -177,15 +161,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: GridView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 2.2,
+                    crossAxisSpacing: AppSpacing.sm + 4,
+                    mainAxisSpacing: AppSpacing.sm + 4,
+                    childAspectRatio: 2.3,
                   ),
                   itemCount: _categoryItems.length,
                   itemBuilder: (context, i) {
@@ -194,6 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: item['icon'] as IconData,
                       label: item['label'] as String,
                       color: item['color'] as Color,
+                      bgColor: item['bgColor'] as Color,
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -206,21 +191,20 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
             // ── 5. Quick Actions ───────────────────────────────────────────
             SliverToBoxAdapter(child: _SectionTitle(title: 'Quick Actions')),
 
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.xl),
                 child: Row(
                   children: [
                     Expanded(
                       child: _QuickActionCard(
                         icon: Icons.play_lesson_rounded,
                         label: 'My Courses',
-                        color: colorScheme.primary,
+                        color: AppColors.primary,
+                        bgColor: AppColors.primarySoft,
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -229,22 +213,43 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _QuickActionCard(
-                        icon: Icons.quiz_rounded,
-                        label: 'Exams',
-                        color: const Color(0xFFF4511E),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Exams coming soon!'),
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        },
+                    if (context.watch<UserProvider>().role == 'admin') ...[
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: _QuickActionCard(
+                          icon: Icons.admin_panel_settings_rounded,
+                          label: 'Admin Panel',
+                          color: AppColors.secondary,
+                          bgColor: AppColors.pastelYellow,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AdminDashboardScreen(),
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                    ),
+                    ] else ...[
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: _QuickActionCard(
+                          icon: Icons.quiz_rounded,
+                          label: 'Exams',
+                          color: AppColors.secondary,
+                          bgColor: AppColors.pastelYellow,
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Access exams from within a course!'),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -255,28 +260,152 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildHeroSection(List<Course> courses) {
+    if (courses.isEmpty) {
+      return const _ContinueLearningEmpty();
+    }
+    // We display the first course as a featured/continue learning hero card
+    final featuredCourse = courses.first;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.pastelPurple,
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.primarySoft, width: 1.5),
+        boxShadow: AppTheme.miniShadow,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                  ),
+                  child: const Text(
+                    'Featured Class',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  featuredCourse.title,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Learn from expert instructors',
+                  style: TextStyle(
+                    color: AppColors.textSecondary.withOpacity(0.9),
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CourseDetailScreen(courseId: featuredCourse.id),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.small),
+                    ),
+                  ),
+                  child: const Text(
+                    'Resume Learning',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          // Beautiful Progress Ring Representation
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 76,
+                height: 76,
+                child: CircularProgressIndicator(
+                  value: 0.65,
+                  strokeWidth: 8,
+                  backgroundColor: Colors.white.withOpacity(0.5),
+                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+              const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '65%',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    'Done',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRecommendedShimmer() {
     return ListView.separated(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       itemCount: 3,
-      separatorBuilder: (context, index) => const SizedBox(width: 12),
+      separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
       itemBuilder: (context, index) =>
-          const _ShimmerBox(width: 170, height: 210, borderRadius: 16),
+          const _ShimmerBox(width: 180, height: 220, borderRadius: AppRadius.medium),
     );
   }
 
   Widget _buildRecommendedList(List<Course> courses, BuildContext context) {
     return ListView.separated(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       itemCount: courses.length > 8 ? 8 : courses.length,
-      separatorBuilder: (context, index) => const SizedBox(width: 12),
+      separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.md),
       itemBuilder: (context, i) {
         final course = courses[i];
         return _RecommendedCard(
           course: course,
-          color: _cardColors[i % _cardColors.length],
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
@@ -289,39 +418,33 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  HEADER
-// ─────────────────────────────────────────────────────────────────────────────
+// ── HEADER ─────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
   final String? name;
   final String initials;
-  final Color color;
   final VoidCallback onLogout;
 
   const _Header({
     required this.name,
     required this.initials,
-    required this.color,
     required this.onLogout,
   });
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 56, 20, 28),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withOpacity(0.75)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 52, AppSpacing.md, AppSpacing.md),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(AppRadius.large)),
+        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Top row: greeting + avatar ────────────────────────────────
           Row(
             children: [
               Expanded(
@@ -330,50 +453,58 @@ class _Header extends StatelessWidget {
                   children: [
                     Text(
                       'Hello, ${name?.split(' ').first ?? 'Learner'} 👋',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
+                    const SizedBox(height: 2),
+                    Text(
                       "Let's continue learning",
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
-              // Notification
-              Container(
-                height: 40,
-                width: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.notifications_outlined,
-                  color: Colors.white,
-                  size: 22,
+              // Notification Action
+              InkWell(
+                onTap: () {},
+                borderRadius: BorderRadius.circular(AppRadius.small),
+                child: Container(
+                  height: 42,
+                  width: 42,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceMuted,
+                    borderRadius: BorderRadius.circular(AppRadius.small),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: const Icon(
+                    Icons.notifications_outlined,
+                    color: AppColors.textPrimary,
+                    size: 22,
+                  ),
                 ),
               ),
-              const SizedBox(width: 10),
-              // Avatar
+              const SizedBox(width: AppSpacing.sm),
+              // User Avatar with logout trigger
               GestureDetector(
                 onTap: onLogout,
                 child: Container(
-                  height: 40,
-                  width: 40,
+                  height: 42,
+                  width: 42,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppColors.primarySoft,
+                    borderRadius: BorderRadius.circular(AppRadius.small),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                   ),
                   alignment: Alignment.center,
                   child: Text(
                     initials,
-                    style: TextStyle(
-                      color: color,
+                    style: const TextStyle(
+                      color: AppColors.primary,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
@@ -383,25 +514,35 @@ class _Header extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.md),
 
-          // ── Search bar ─────────────────────────────────────────────────
-          Container(
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                const SizedBox(width: 14),
-                Icon(Icons.search_rounded, color: Colors.grey.shade400),
-                const SizedBox(width: 10),
-                Text(
-                  'Search courses...',
-                  style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                ),
-              ],
+          // Custom interactive Search action field
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CourseListScreen()),
+              );
+            },
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceMuted,
+                borderRadius: BorderRadius.circular(AppRadius.medium),
+                border: Border.all(color: AppColors.border),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Row(
+                children: [
+                  const Icon(Icons.search_rounded, color: AppColors.textSecondary, size: 20),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Search courses...',
+                    style: TextStyle(color: AppColors.textSecondary.withOpacity(0.8), fontSize: 14),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -410,73 +551,63 @@ class _Header extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  CONTINUE LEARNING — Empty State
-// ─────────────────────────────────────────────────────────────────────────────
+// ── CONTINUE LEARNING — Empty State ──────────────────────────────────────────
 
 class _ContinueLearningEmpty extends StatelessWidget {
   const _ContinueLearningEmpty();
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppTheme.miniShadow,
       ),
       child: Row(
         children: [
           Container(
-            width: 56,
-            height: 56,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(14),
+              color: AppColors.primarySoft,
+              borderRadius: BorderRadius.circular(AppRadius.medium),
             ),
-            child: Icon(Icons.auto_stories_rounded, color: color, size: 28),
+            child: const Icon(Icons.auto_stories_rounded, color: AppColors.primary, size: 24),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'Start your learning journey',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   "You haven't enrolled in any courses yet.",
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          FilledButton(
+          const SizedBox(width: AppSpacing.sm),
+          ElevatedButton(
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const CourseListScreen()),
             ),
-            style: FilledButton.styleFrom(
+            style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
-              textStyle: const TextStyle(fontSize: 12),
             ),
-            child: const Text('Browse'),
+            child: const Text('Browse', style: TextStyle(fontSize: 12, color: Colors.white)),
           ),
         ],
       ),
@@ -484,143 +615,128 @@ class _ContinueLearningEmpty extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  RECOMMENDED COURSE CARD (Horizontal)
-// ─────────────────────────────────────────────────────────────────────────────
+// ── RECOMMENDED COURSE CARD ──────────────────────────────────────────────────
 
 class _RecommendedCard extends StatelessWidget {
   final Course course;
-  final Color color;
   final VoidCallback onTap;
 
   const _RecommendedCard({
     required this.course,
-    required this.color,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 170,
+        width: 175,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.large),
+          boxShadow: AppTheme.softShadow,
+          border: Border.all(color: AppColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Thumbnail ────────────────────────────────────────────────
+            // Thumbnail
             Container(
-              height: 100,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
+              height: 104,
+              decoration: const BoxDecoration(
+                color: AppColors.surfaceMuted,
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(AppRadius.large),
                 ),
               ),
               clipBehavior: Clip.antiAlias,
-              child: course.thumbnailUrl != null
+              child: course.thumbnailUrl != null && course.thumbnailUrl!.isNotEmpty
                   ? Image.network(
                       _fullImageUrl(course.thumbnailUrl),
                       fit: BoxFit.cover,
                       width: double.infinity,
-                      // Show icon if image fails to load
-                      errorBuilder: (context, error, stackTrace) => Center(
+                      errorBuilder: (context, error, stackTrace) => const Center(
                         child: Icon(
                           Icons.menu_book_rounded,
-                          color: color,
-                          size: 40,
+                          color: AppColors.primary,
+                          size: 36,
                         ),
                       ),
-                      // Show icon while loading
-                      loadingBuilder: (_, child, progress) {
-                        if (progress == null) return child;
-                        return Center(
-                          child: Icon(
-                            Icons.menu_book_rounded,
-                            color: color.withOpacity(0.4),
-                            size: 40,
-                          ),
-                        );
-                      },
                     )
-                  : Center(
+                  : const Center(
                       child: Icon(
                         Icons.menu_book_rounded,
-                        color: color,
-                        size: 40,
+                        color: AppColors.primary,
+                        size: 36,
                       ),
                     ),
             ),
-            // Info
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    course.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
+            // Details info
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.sm + 2),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      course.title,
+                      style: textTheme.titleSmall?.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.star_rounded,
-                        color: Colors.amber.shade600,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '4.5',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
+                    const Spacer(),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.star_rounded,
+                          color: AppColors.warning,
+                          size: 14,
                         ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: course.isFree
-                              ? Colors.green.shade50
-                              : color.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          course.isFree
-                              ? 'FREE'
-                              : '₹${course.price.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            fontSize: 10,
+                        const SizedBox(width: 2),
+                        Text(
+                          '4.8',
+                          style: textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
                             fontWeight: FontWeight.bold,
-                            color: course.isFree
-                                ? Colors.green.shade700
-                                : color,
+                            color: AppColors.textSecondary,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: course.isFree
+                                ? AppColors.pastelMint
+                                : AppColors.primarySoft,
+                            borderRadius: BorderRadius.circular(AppRadius.pill),
+                          ),
+                          child: Text(
+                            course.isFree
+                                ? 'FREE'
+                                : '₹${course.price.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: course.isFree
+                                  ? Colors.green.shade700
+                                  : AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -630,20 +746,20 @@ class _RecommendedCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  CATEGORY CHIP
-// ─────────────────────────────────────────────────────────────────────────────
+// ── CATEGORY CHIP ───────────────────────────────────────────────────────────
 
 class _CategoryChip extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
+  final Color bgColor;
   final VoidCallback onTap;
 
   const _CategoryChip({
     required this.icon,
     required this.label,
     required this.color,
+    required this.bgColor,
     required this.onTap,
   });
 
@@ -653,34 +769,30 @@ class _CategoryChip extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          boxShadow: AppTheme.miniShadow,
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
-            const SizedBox(width: 14),
+            const SizedBox(width: AppSpacing.sm),
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                color: bgColor,
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Text(
                 label,
                 style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: AppColors.textPrimary,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -692,20 +804,20 @@ class _CategoryChip extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  QUICK ACTION CARD
-// ─────────────────────────────────────────────────────────────────────────────
+// ── QUICK ACTION CARD ────────────────────────────────────────────────────────
 
 class _QuickActionCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
+  final Color bgColor;
   final VoidCallback onTap;
 
   const _QuickActionCard({
     required this.icon,
     required this.label,
     required this.color,
+    required this.bgColor,
     required this.onTap,
   });
 
@@ -714,22 +826,30 @@ class _QuickActionCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.15)),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.large),
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppTheme.miniShadow,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm + 2),
+              decoration: BoxDecoration(
+                color: bgColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               label,
               style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),
             ),
@@ -740,9 +860,7 @@ class _QuickActionCard extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  SECTION TITLE
-// ─────────────────────────────────────────────────────────────────────────────
+// ── SECTION TITLE ────────────────────────────────────────────────────────────
 
 class _SectionTitle extends StatelessWidget {
   final String title;
@@ -753,27 +871,28 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.md, AppSpacing.md),
       child: Row(
         children: [
           Text(
             title,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.3,
             ),
           ),
           const Spacer(),
           if (onSeeAll != null)
             GestureDetector(
               onTap: onSeeAll,
-              child: Text(
+              child: const Text(
                 'See all',
                 style: TextStyle(
                   fontSize: 13,
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w500,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -783,9 +902,7 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  EMPTY STATE — No recommended courses
-// ─────────────────────────────────────────────────────────────────────────────
+// ── EMPTY STATE — No recommended courses ──────────────────────────────────────
 
 class _EmptyHorizontalCourses extends StatelessWidget {
   const _EmptyHorizontalCourses();
@@ -796,11 +913,11 @@ class _EmptyHorizontalCourses extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.school_outlined, size: 36, color: Colors.grey.shade300),
-          const SizedBox(height: 8),
+          const Icon(Icons.school_outlined, size: 36, color: AppColors.textSecondary),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             'No courses available yet',
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),
         ],
       ),
@@ -808,9 +925,7 @@ class _EmptyHorizontalCourses extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  SHIMMER BOX
-// ─────────────────────────────────────────────────────────────────────────────
+// ── SHIMMER BOX ──────────────────────────────────────────────────────────────
 
 class _ShimmerBox extends StatefulWidget {
   final double? width;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/lesson.dart';
 import '../widgets/video_player_widget.dart';
+import '../theme/app_theme.dart';
 
 class LessonPlayerScreen extends StatefulWidget {
   final List<Lesson> lessons;
@@ -37,49 +38,55 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
   Widget build(BuildContext context) {
     final currentLesson = widget.lessons[_currentIndex];
     final bool isLocked = !widget.isEnrolled && !currentLesson.isPreview;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text(
-          "Course Player",
-          style: TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
+        title: const Text("Course Player"),
+        backgroundColor: AppColors.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: AppColors.border)),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 1. Video Player Section
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: VideoPlayerWidget(
-              // ValueKey forces Flutter to fully dispose → recreate the widget
-              // (and its controller) when the lesson changes, instead of the
-              // didUpdateWidget path which can leave stale WebView references.
-              key: ValueKey(currentLesson.videoId),
-              videoId: currentLesson.videoId,
-              isLocked: isLocked,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.medium),
+                boxShadow: AppTheme.softShadow,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: VideoPlayerWidget(
+                // ValueKey forces Flutter to fully dispose → recreate the widget
+                // (and its controller) when the lesson changes, instead of the
+                // didUpdateWidget path which can leave stale WebView references.
+                key: ValueKey(currentLesson.videoId),
+                videoId: currentLesson.videoId,
+                isLocked: isLocked,
+              ),
             ),
           ),
 
           // 2. Lesson Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md + 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: currentLesson.isPreview 
-                            ? const Color(0xFFDCFCE7) 
-                            : const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(20),
+                            ? AppColors.pastelMint 
+                            : AppColors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                        border: Border.all(color: AppColors.border),
                       ),
                       child: Text(
                         currentLesson.isPreview ? "FREE PREVIEW" : "LESSON ${currentLesson.orderIndex + 1}",
@@ -87,41 +94,42 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: currentLesson.isPreview 
-                              ? const Color(0xFF166534) 
-                              : const Color(0xFF64748B),
+                              ? Colors.green.shade700 
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.sm),
                 Text(
                   currentLesson.title,
-                  style: const TextStyle(
-                    fontSize: 20,
+                  style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+                    color: AppColors.textPrimary,
+                    fontSize: 18,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 const Text(
                   "Pre-recorded session",
-                  style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 24),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          const SizedBox(height: AppSpacing.lg),
+          const Divider(),
 
           // 3. Playlist / Navigation
           Expanded(
             child: Container(
-              color: Colors.white,
+              color: AppColors.surface,
               child: ListView.separated(
+                physics: const BouncingScrollPhysics(),
                 itemCount: widget.lessons.length,
-                separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                separatorBuilder: (context, index) => const Divider(),
                 itemBuilder: (context, index) {
                   final lesson = widget.lessons[index];
                   final isCurrent = index == _currentIndex;
@@ -129,39 +137,51 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
 
                   return ListTile(
                     selected: isCurrent,
-                    selectedTileColor: const Color(0xFFEFF6FF),
-                    onTap: () => _onLessonSelected(index),
+                    selectedTileColor: AppColors.primarySoft.withOpacity(0.4),
+                    onTap: () {
+                      if (isLessonLocked) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('This lesson is locked. Enroll in the course to unlock.'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      } else {
+                        _onLessonSelected(index);
+                      }
+                    },
                     leading: Container(
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: isCurrent ? const Color(0xFF3B82F6) : const Color(0xFFF1F5F9),
+                        color: isCurrent ? AppColors.primary : AppColors.surfaceMuted,
                         shape: BoxShape.circle,
+                        border: Border.all(color: isCurrent ? AppColors.primary : AppColors.border),
                       ),
                       child: Center(
                         child: Icon(
                           isCurrent ? Icons.play_arrow_rounded : Icons.play_arrow_outlined,
                           size: 18,
-                          color: isCurrent ? Colors.white : const Color(0xFF64748B),
+                          color: isCurrent ? Colors.white : AppColors.textSecondary,
                         ),
                       ),
                     ),
                     title: Text(
                       lesson.title,
-                      style: TextStyle(
+                      style: textTheme.titleSmall?.copyWith(
                         fontSize: 14,
                         fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
-                        color: isCurrent ? const Color(0xFF2563EB) : const Color(0xFF1E293B),
+                        color: isCurrent ? AppColors.primary : AppColors.textPrimary,
                       ),
                     ),
                     subtitle: Text(
                       "Lesson ${lesson.orderIndex + 1}",
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                     trailing: isLessonLocked 
-                        ? const Icon(Icons.lock_rounded, size: 16, color: Color(0xFFCBD5E1))
+                        ? const Icon(Icons.lock_rounded, size: 16, color: AppColors.textSecondary)
                         : (lesson.isPreview 
-                            ? const Icon(Icons.check_circle_outline, size: 16, color: Color(0xFF22C55E))
+                            ? const Icon(Icons.check_circle_outline, size: 16, color: AppColors.success)
                             : null),
                   );
                 },
@@ -171,48 +191,51 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
           
           // 4. Bottom Controls (Previous / Next)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
-                ),
-              ],
+              color: AppColors.surface,
+              boxShadow: AppTheme.softShadow,
+              border: const Border(top: BorderSide(color: AppColors.border)),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _currentIndex > 0 
-                        ? () => _onLessonSelected(_currentIndex - 1) 
-                        : null,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: const BorderSide(color: Color(0xFFE2E8F0)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: SafeArea(
+              top: false,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: OutlinedButton(
+                        onPressed: _currentIndex > 0 
+                            ? () => _onLessonSelected(_currentIndex - 1) 
+                            : null,
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          side: const BorderSide(color: AppColors.border),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
+                        ),
+                        child: const Text("Previous", style: TextStyle(color: AppColors.textSecondary)),
+                      ),
                     ),
-                    child: const Text("Previous", style: TextStyle(color: Color(0xFF64748B))),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _currentIndex < widget.lessons.length - 1 
-                        ? () => _onLessonSelected(_currentIndex + 1) 
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3B82F6),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: _currentIndex < widget.lessons.length - 1 
+                            ? () => _onLessonSelected(_currentIndex + 1) 
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
+                        ),
+                        child: const Text("Next Lesson", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
                     ),
-                    child: const Text("Next Lesson", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

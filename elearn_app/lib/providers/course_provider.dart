@@ -134,6 +134,42 @@ class CourseProvider extends ChangeNotifier {
     }
   }
 
+  // ── Create YouTube Lesson (faculty/admin only) ──────────────────────────────
+
+  Future<bool> createYoutubeLesson({
+    required String courseId,
+    required String title,
+    required String videoId,
+    required int orderIndex,
+    required bool isPreview,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final newLesson = await CourseService.createYoutubeLesson(
+        courseId: courseId,
+        title: title,
+        videoId: videoId,
+        orderIndex: orderIndex,
+        isPreview: isPreview,
+      );
+      _lessons.add(newLesson);
+      _lessons.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+      return true;
+    } on AuthException catch (e) {
+      _error = e.message;
+      return false;
+    } catch (e) {
+      _error = 'Error: ${e.toString()}';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   void clearError() {
     _error = null;
     notifyListeners();

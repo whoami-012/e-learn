@@ -4,8 +4,20 @@ library;
 class AppConstants {
   AppConstants._(); // prevent instantiation
 
+  // ── Environment toggle ──────────────────────────────────────────────────────
+  /// Set to true to use ngrok (real device / public testing).
+  /// Set to false to use local Android emulator (10.0.2.2).
+  static const bool _useNgrok = true;
+
+  /// Your ngrok public URL — update this every time ngrok restarts.
+  /// Example: 'https://abc123.ngrok-free.app'
+  static const String _ngrokBase = 'https://unflawed-grandly-hypnotism.ngrok-free.dev';
+
+  /// Local emulator base — 10.0.2.2 maps to host machine localhost.
+  static const String _localBase = 'http://10.0.2.2:8000';
+
   /// Base server URL (no path prefix) — used for building static asset URLs.
-  static const String serverBase = 'http://10.0.2.2:8000';
+  static const String serverBase = _useNgrok ? _ngrokBase : _localBase;
 
   /// Base URL of the FastAPI backend.
   static const String baseUrl = '$serverBase/api/v1';

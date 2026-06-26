@@ -6,66 +6,60 @@ class AIAssistantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFEFF6FF), Color(0xFFEEF2FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFDBEAFE), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFDBEAFE).withOpacity(0.5),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
+          gradient: AppTheme.aiGradient,
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: AppColors.border),
+          boxShadow: AppTheme.miniShadow,
         ),
         child: Row(
           children: [
             // ── AI Icon Container ──────────────────────────────────────────
             Container(
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF60A5FA), Color(0xFF818CF8)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: AppTheme.primaryGradient,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFBFDBFE).withOpacity(0.5),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: AppColors.primary.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
-              child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 20),
+              child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 18),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
 
             // ── Text Content ──────────────────────────────────────────────
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Your AI assistant',
-                    style: AppTheme.bodySmall.copyWith(
-                      color: const Color(0xFF3B82F6),
-                      fontWeight: FontWeight.w600,
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      letterSpacing: 0.5,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     "You're teaching great today!",
-                    style: AppTheme.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                    style: textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ],
               ),
@@ -74,7 +68,7 @@ class AIAssistantCard extends StatelessWidget {
             // ── Sparkle Emoji Decoration ──────────────────────────────────
             const Text(
               '✨',
-              style: TextStyle(fontSize: 32),
+              style: TextStyle(fontSize: 28),
             ),
           ],
         ),

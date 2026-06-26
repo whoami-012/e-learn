@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 
 import '../core/constants/app_constants.dart';
 import '../core/exceptions/auth_exception.dart';
-import '../core/storage/token_storage.dart';
+import '../core/network/http_client.dart';
 import '../models/enrollment.dart';
 
 class EnrollmentService {
@@ -49,19 +49,15 @@ class EnrollmentService {
   // ── GET /enrollments/check/{course_id} ───────────────────────────────────────
 
   static Future<EnrollmentStatus> checkEnrollment(String courseId) async {
-    final token = await TokenStorage.getAccessToken();
-    if (token == null) {
-      // If not logged in, not enrolled. Or throw exception based on flow.
+    final token = await ApiClient.headers(withAuth: true);
+    if (!token.containsKey('Authorization')) {
       return const EnrollmentStatus(isEnrolled: false);
     }
 
     try {
-      final response = await http.get(
+      final response = await ApiClient.get(
         Uri.parse('${AppConstants.enrollmentsEndpoint}/check/$courseId'),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
+        withAuth: true,
       );
       final data = _handleResponse(response);
       return EnrollmentStatus.fromJson(data);
@@ -77,16 +73,10 @@ class EnrollmentService {
   // ── POST /enrollments/{course_id} ───────────────────────────────────────────
 
   static Future<EnrollmentStatus> enroll(String courseId) async {
-    final token = await TokenStorage.getAccessToken();
-    if (token == null) throw const InvalidCredentialsException();
-
     try {
-      final response = await http.post(
+      final response = await ApiClient.post(
         Uri.parse('${AppConstants.enrollmentsEndpoint}/$courseId'),
-        headers: {
-          ..._headers,
-          'Authorization': 'Bearer $token',
-        },
+        withAuth: true,
       );
       final body = _handleResponse(response);
       return EnrollmentStatus.fromJson(body);
