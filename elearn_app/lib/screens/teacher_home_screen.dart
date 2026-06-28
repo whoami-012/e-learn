@@ -14,6 +14,8 @@ import '../widgets/analytics_card.dart';
 import 'auth/login_screen.dart';
 import 'courses/course_detail_screen.dart';
 import 'courses/create_course_screen.dart';
+import '../features/live_class/presentation/screens/live_class_list_screen.dart';
+import 'messages/message_screen.dart';
 
 class TeacherHomeScreen extends StatefulWidget {
   const TeacherHomeScreen({super.key});
@@ -56,7 +58,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Consumer<TeacherDashboardProvider>(
           builder: (context, provider, _) {
@@ -75,6 +77,12 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                       userName: user?.name.split(' ').first ?? 'Sarah',
                       onNotificationTap: () {},
                       onProfileTap: _logout,
+                      onMessageTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const MessageScreen()),
+                        );
+                      },
                     ),
 
                     // ── 2. Search Bar ─────────────────────────────────────
@@ -94,7 +102,8 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
 
                     // ── 5. Section: Let's teach ───────────────────────────
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
+                      padding: const EdgeInsets.fromLTRB(AppSpacing.md,
+                          AppSpacing.md, AppSpacing.md, AppSpacing.sm),
                       child: Text(
                         "Let's teach",
                         style: textTheme.titleLarge?.copyWith(
@@ -107,7 +116,12 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
 
                     // ── 6. Category Chips ─────────────────────────────────
                     CategoryChips(
-                      categories: const ['All', 'Courses', 'Uploads', 'Scheduled'],
+                      categories: const [
+                        'All',
+                        'Courses',
+                        'Uploads',
+                        'Scheduled'
+                      ],
                       onCategorySelected: (category) {},
                     ),
 
@@ -115,25 +129,34 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
 
                     // ── 7. Course List ────────────────────────────────────
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                       child: provider.isLoading && provider.courses.isEmpty
-                          ? const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary)))
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.primary)))
                           : provider.courses.isEmpty
                               ? _buildEmptyState(provider, user?.id)
                               : Column(
-                                  children: provider.courses.asMap().entries.map((entry) {
+                                  children: provider.courses
+                                      .asMap()
+                                      .entries
+                                      .map((entry) {
                                     final index = entry.key;
                                     final course = entry.value;
                                     return CourseCard(
                                       course: course,
                                       students: 1234,
                                       duration: '6 weeks',
-                                      gradient: _courseGradients[index % _courseGradients.length],
+                                      gradient: _courseGradients[
+                                          index % _courseGradients.length],
                                       onTap: () {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (_) => CourseDetailScreen(courseId: course.id),
+                                            builder: (_) => CourseDetailScreen(
+                                                courseId: course.id),
                                           ),
                                         );
                                       },
@@ -144,7 +167,8 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
 
                     // ── 8. Analytics Section ──────────────────────────────
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.md, AppSpacing.sm),
+                      padding: const EdgeInsets.fromLTRB(AppSpacing.md,
+                          AppSpacing.lg, AppSpacing.md, AppSpacing.sm),
                       child: Text(
                         "Analytics",
                         style: textTheme.titleLarge?.copyWith(
@@ -156,12 +180,14 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.xxl),
+                      padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md, 0, AppSpacing.md, AppSpacing.xxl),
                       child: GridView.builder(
                         padding: EdgeInsets.zero,
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: AppSpacing.sm + 4,
                           mainAxisSpacing: AppSpacing.sm + 4,
@@ -180,23 +206,54 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreateCourseScreen()),
-          ).then((_) {
-            if (mounted) {
-              final user = context.read<UserProvider>().user;
-              context.read<TeacherDashboardProvider>().fetchCourses(user?.id);
-            }
-          });
-        },
-        backgroundColor: AppColors.primary,
-        elevation: 2,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('New Course', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'teacher_live_classes',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LiveClassListScreen()),
+            ),
+            backgroundColor: AppColors.secondary,
+            elevation: 2,
+            icon: const Icon(Icons.video_camera_front_rounded,
+                color: Colors.white),
+            label: const Text(
+              'Live Classes',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton.extended(
+            heroTag: 'teacher_new_course',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CreateCourseScreen()),
+              ).then((_) {
+                if (mounted) {
+                  final user = context.read<UserProvider>().user;
+                  context
+                      .read<TeacherDashboardProvider>()
+                      .fetchCourses(user?.id);
+                }
+              });
+            },
+            backgroundColor: AppColors.primary,
+            elevation: 2,
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: const Text(
+              'New Course',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.medium)),
+          ),
+        ],
       ),
     );
   }
@@ -205,22 +262,26 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     // Redesign stats configuration
     final configs = [
       {
-        'gradient': const LinearGradient(colors: [Color(0xFF3B82F6), Color(0xFF2563EB)]),
+        'gradient': const LinearGradient(
+            colors: [Color(0xFF3B82F6), Color(0xFF2563EB)]),
         'bgColor': const Color(0xFFEFF6FF),
         'shadowColor': const Color(0xFF3B82F6),
       },
       {
-        'gradient': const LinearGradient(colors: [Color(0xFFA855F7), Color(0xFF9333EA)]),
+        'gradient': const LinearGradient(
+            colors: [Color(0xFFA855F7), Color(0xFF9333EA)]),
         'bgColor': const Color(0xFFF5F3FF),
         'shadowColor': const Color(0xFFA855F7),
       },
       {
-        'gradient': const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)]),
+        'gradient': const LinearGradient(
+            colors: [Color(0xFF10B981), Color(0xFF059669)]),
         'bgColor': const Color(0xFFECFDF5),
         'shadowColor': const Color(0xFF10B981),
       },
       {
-        'gradient': const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFD97706)]),
+        'gradient': const LinearGradient(
+            colors: [Color(0xFFF59E0B), Color(0xFFD97706)]),
         'bgColor': const Color(0xFFFFFBEB),
         'shadowColor': const Color(0xFFF59E0B),
       },
@@ -249,7 +310,8 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: AppSpacing.xl),
-          const Icon(Icons.school_outlined, size: 52, color: AppColors.textSecondary),
+          const Icon(Icons.school_outlined,
+              size: 52, color: AppColors.textSecondary),
           const SizedBox(height: AppSpacing.md),
           Text(
             provider.error ?? 'No courses yet',

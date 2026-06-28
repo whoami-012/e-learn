@@ -28,6 +28,7 @@ class Course(Base):
     lessons = relationship("Lesson", back_populates="course", cascade="all, delete-orphan", passive_deletes=True)
     exams = relationship("Exam", back_populates="course", cascade="all, delete-orphan", passive_deletes=True)
     notes = relationship("Note", back_populates="course", cascade="all, delete-orphan", passive_deletes=True)
+    live_classes = relationship("LiveClass", back_populates="course", cascade="all, delete-orphan", passive_deletes=True)
 
     __table_args__ = (
         Index("idx_courses_faculty", "faculty_id"),

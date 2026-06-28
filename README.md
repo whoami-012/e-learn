@@ -1,5 +1,7 @@
 # E-Learn
 
+Agora live-class setup and API documentation: [LIVE_CLASSES.md](LIVE_CLASSES.md)
+
 This is an e-learning project I’m building with a FastAPI backend and a Flutter app.
 
 Right now, the base setup is in place and the auth flow is the most complete part. The repo also includes a dashboard redesign folder and a local `servers/` workspace that I used during development.

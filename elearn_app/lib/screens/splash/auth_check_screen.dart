@@ -35,8 +35,18 @@ class _AuthCheckScreenState extends State<AuthCheckScreen> {
     if (hasSession && mounted) {
       // Pre-load user so HomeScreen has role info immediately
       await context.read<UserProvider>().loadUser();
+      if (mounted) {
+        final hasUser = context.read<UserProvider>().hasUser;
+        if (hasUser) {
+          return true;
+        } else {
+          // Token is invalid or expired. Clear tokens so they are redirected to login.
+          await TokenStorage.clearTokens();
+          return false;
+        }
+      }
     }
-    return hasSession;
+    return false;
   }
 
   @override

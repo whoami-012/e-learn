@@ -20,8 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailController = TextEditingController(text: 'student@elearn.com');
+  final _passwordController = TextEditingController(text: 'Student@123');
 
   // UI state
   bool _isPasswordVisible = false;

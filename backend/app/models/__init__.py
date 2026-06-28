@@ -10,6 +10,13 @@ from app.models.exam import Exam
 from app.models.question import Question
 from app.models.attempt import Attempt
 from app.models.note import Note
+from app.models.live_class import LiveClass, LiveClassAttendance
+from app.messaging.models import (
+    ConversationReadState,
+    DirectConversation,
+    Message,
+    MessageAttachment,
+)
 
 __all__ = [
     "User",
@@ -21,4 +28,10 @@ __all__ = [
     "Question",
     "Attempt",
     "Note",
+    "LiveClass",
+    "LiveClassAttendance",
+    "DirectConversation",
+    "Message",
+    "MessageAttachment",
+    "ConversationReadState",
 ]

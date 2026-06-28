@@ -1,25 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../providers/theme_provider.dart';
 
 class TeacherHeader extends StatelessWidget {
   final String userName;
   final VoidCallback onNotificationTap;
   final VoidCallback onProfileTap;
+  final VoidCallback onMessageTap;
 
   const TeacherHeader({
     super.key,
     required this.userName,
     required this.onNotificationTap,
     required this.onProfileTap,
+    required this.onMessageTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = Theme.of(context).colorScheme;
+    final themeProvider = context.watch<ThemeProvider>();
 
     return Container(
-      color: AppColors.background,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+      color: Theme.of(context).scaffoldBackgroundColor,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.md),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -46,7 +53,10 @@ class TeacherHeader extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Text(
                       userName.isNotEmpty ? userName[0].toUpperCase() : 'T',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16),
                     ),
                   ),
                 ),
@@ -60,15 +70,15 @@ class TeacherHeader extends StatelessWidget {
                         'Hello, $userName 👋',
                         style: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: colors.onSurface,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const Text(
+                      Text(
                         'Good Morning',
                         style: TextStyle(
-                          color: AppColors.textSecondary,
+                          color: colors.onSurfaceVariant,
                           fontSize: 12,
                         ),
                       ),
@@ -83,6 +93,19 @@ class TeacherHeader extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              _HeaderActionButton(
+                icon: themeProvider.isDarkMode
+                    ? Icons.light_mode_rounded
+                    : Icons.dark_mode_rounded,
+                onTap: themeProvider.toggleTheme,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              // Messages
+              _HeaderActionButton(
+                icon: Icons.chat_bubble_outline_rounded,
+                onTap: onMessageTap,
+              ),
+              const SizedBox(width: AppSpacing.sm),
               // Language Switcher
               _HeaderActionButton(
                 icon: Icons.public_rounded,
@@ -106,7 +129,10 @@ class TeacherHeader extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.error,
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.background, width: 1.5),
+                        border: Border.all(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                   ),
@@ -133,27 +159,29 @@ class _HeaderActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.pill),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: label != null ? 12 : 10, vertical: 10),
+        padding: EdgeInsets.symmetric(
+            horizontal: label != null ? 12 : 10, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: colors.surface,
           borderRadius: BorderRadius.circular(AppRadius.pill),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: colors.outlineVariant),
           boxShadow: AppTheme.miniShadow,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: AppColors.textSecondary),
+            Icon(icon, size: 16, color: colors.onSurfaceVariant),
             if (label != null) ...[
               const SizedBox(width: 4),
               Text(
                 label!,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: colors.onSurface,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),

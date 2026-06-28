@@ -10,6 +10,8 @@ from app.api.v1.endpoints import (
     attempts,
     payments,
     users,
+    live_classes,
+    messaging,
 )
 
 # Central v1 router — all endpoint routers are registered here
@@ -25,3 +27,5 @@ api_router.include_router(exams.router)
 api_router.include_router(attempts.router)
 api_router.include_router(payments.router)
 api_router.include_router(users.router)
+api_router.include_router(live_classes.router)
+api_router.include_router(messaging.router)

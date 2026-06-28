@@ -3,30 +3,42 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const primary = Color(0xFF6542A6);
-  static const primaryDark = Color(0xFF45247D);
-  static const primarySoft = Color(0xFFE8E1FF);
+  static const primary = Color(0xFF6C45D8);
+  static const primaryDark = Color(0xFF4D2FA4);
+  static const primarySoft = Color(0xFFE9E2FF);
 
-  static const secondary = Color(0xFFF5A45D);
-  static const blue = Color(0xFF2AA7F2);
-  static const success = Color(0xFF5DDE9B);
-  static const warning = Color(0xFFF7BE4B);
-  static const error = Color(0xFFF05B63);
+  static const navy = Color(0xFF101936);
+  static const textSecondary = Color(0xFF6F7588);
 
-  static const background = Color(0xFFF4F6F8);
+  static const orange = Color(0xFFFF963F);
+  static const orangeSoft = Color(0xFFFFE6CF);
+
+  static const yellowSoft = Color(0xFFFFE9B3);
+  static const lavenderSoft = Color(0xFFE2D7FF);
+  static const blueSoft = Color(0xFFD9F1FF);
+  static const greenSoft = Color(0xFFE2F7EF);
+
+  static const success = Color(0xFF2DCB82);
+  static const live = Color(0xFFFF3B3B);
+
   static const surface = Color(0xFFFFFFFF);
+  static const background = Color(0xFFF7F8FC);
+  static const border = Color(0xFFE9EBF2);
+
+  static const bottomNav = Color(0xFF0D1738);
+
+  // Compatibility aliases
+  static const textPrimary = navy;
+  static const secondary = orange;
+  static const blue = Color(0xFF2AA7F2);
+  static const warning = orange;
+  static const error = live;
   static const surfaceMuted = Color(0xFFF8F9FB);
-
-  static const textPrimary = Color(0xFF0B1736);
-  static const textSecondary = Color(0xFF7D8493);
-  static const border = Color(0xFFE8EBEF);
-
-  // Pastel Accents
-  static const pastelPurple = Color(0xFFE8E1FF);
-  static const pastelBlue = Color(0xFFD9F3FF);
+  static const pastelPurple = lavenderSoft;
+  static const pastelBlue = blueSoft;
   static const pastelPink = Color(0xFFFFE1E6);
-  static const pastelYellow = Color(0xFFFFF1BF);
-  static const pastelMint = Color(0xFFDDF8EA);
+  static const pastelYellow = yellowSoft;
+  static const pastelMint = greenSoft;
 }
 
 class AppSpacing {
@@ -206,7 +218,8 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.background,
-      fontFamily: 'Plus Jakarta Sans', // Fallbacks to system sans-serif if not found
+      fontFamily:
+          'Plus Jakarta Sans', // Fallbacks to system sans-serif if not found
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         primary: AppColors.primary,
@@ -219,16 +232,48 @@ class AppTheme {
       ),
 
       textTheme: const TextTheme(
-        displayLarge: TextStyle(fontSize: 34.0, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-        headlineLarge: TextStyle(fontSize: 28.0, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-        headlineMedium: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-        titleLarge: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-        titleMedium: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-        titleSmall: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-        bodyLarge: TextStyle(fontSize: 16.0, fontWeight: FontWeight.normal, color: AppColors.textPrimary),
-        bodyMedium: TextStyle(fontSize: 14.0, fontWeight: FontWeight.normal, color: AppColors.textPrimary),
-        bodySmall: TextStyle(fontSize: 12.0, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
-        labelLarge: TextStyle(fontSize: 14.0, fontWeight: FontWeight.w600, color: Colors.white),
+        displayLarge: TextStyle(
+            fontSize: 34.0,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary),
+        headlineLarge: TextStyle(
+            fontSize: 28.0,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary),
+        headlineMedium: TextStyle(
+            fontSize: 24.0,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary),
+        titleLarge: TextStyle(
+            fontSize: 20.0,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary),
+        titleMedium: TextStyle(
+            fontSize: 16.0,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary),
+        titleSmall: TextStyle(
+            fontSize: 14.0,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary),
+        bodyLarge: TextStyle(
+            fontSize: 16.0,
+            fontWeight: FontWeight.normal,
+            color: AppColors.textPrimary),
+        bodyMedium: TextStyle(
+            fontSize: 14.0,
+            fontWeight: FontWeight.normal,
+            color: AppColors.textPrimary),
+        bodySmall: const TextStyle(
+            inherit: true,
+            fontSize: 12.0,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary),
+        labelLarge: const TextStyle(
+            inherit: true,
+            fontSize: 14.0,
+            fontWeight: FontWeight.w600,
+            color: Colors.white),
       ),
 
       appBarTheme: const AppBarTheme(
@@ -264,6 +309,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           textStyle: const TextStyle(
+            inherit: true,
             fontSize: 15,
             fontWeight: FontWeight.bold,
             fontFamily: 'Plus Jakarta Sans',
@@ -280,6 +326,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           textStyle: const TextStyle(
+            inherit: true,
             fontSize: 15,
             fontWeight: FontWeight.bold,
             fontFamily: 'Plus Jakarta Sans',
@@ -292,6 +339,7 @@ class AppTheme {
           foregroundColor: AppColors.primary,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           textStyle: const TextStyle(
+            inherit: true,
             fontSize: 14,
             fontWeight: FontWeight.w600,
             fontFamily: 'Plus Jakarta Sans',
@@ -302,7 +350,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceMuted,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.medium),
           borderSide: const BorderSide(color: AppColors.border, width: 1),
@@ -373,12 +422,170 @@ class AppTheme {
         backgroundColor: AppColors.surfaceMuted,
         selectedColor: AppColors.primarySoft,
         disabledColor: Colors.transparent,
-        labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
-        secondaryLabelStyle: const TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.bold),
+        labelStyle: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w500),
+        secondaryLabelStyle: const TextStyle(
+            color: AppColors.primary,
+            fontSize: 13,
+            fontWeight: FontWeight.bold),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.pill),
           side: const BorderSide(color: AppColors.border),
+        ),
+      ),
+    );
+  }
+
+  static ThemeData get darkTheme {
+    const background = Color(0xFF0F1117);
+    const surface = Color(0xFF181B23);
+    const surfaceMuted = Color(0xFF222631);
+    const textPrimary = Color(0xFFF4F5F7);
+    const textSecondary = Color(0xFFADB4C4);
+    const border = Color(0xFF303542);
+    const primary = Color(0xFFB69AF4);
+
+    final scheme = ColorScheme.fromSeed(
+      seedColor: primary,
+      brightness: Brightness.dark,
+      primary: primary,
+      secondary: AppColors.secondary,
+      surface: surface,
+      error: AppColors.error,
+    );
+
+    final base = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: background,
+      fontFamily: 'Plus Jakarta Sans',
+      colorScheme: scheme,
+    );
+
+    return base.copyWith(
+      textTheme: base.textTheme
+          .apply(
+            bodyColor: textPrimary,
+            displayColor: textPrimary,
+          )
+          .copyWith(
+            bodySmall: const TextStyle(inherit: true, color: textSecondary),
+            labelLarge: const TextStyle(inherit: true, fontSize: 14.0, fontWeight: FontWeight.w600, color: textPrimary),
+          ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: background,
+        foregroundColor: textPrimary,
+        elevation: 0,
+        iconTheme: IconThemeData(color: textPrimary),
+        titleTextStyle: TextStyle(
+          color: textPrimary,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Plus Jakarta Sans',
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          side: const BorderSide(color: border),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: surfaceMuted,
+        labelStyle: const TextStyle(color: textSecondary),
+        hintStyle: const TextStyle(color: textSecondary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          borderSide: const BorderSide(color: border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          borderSide: const BorderSide(color: border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          borderSide: const BorderSide(color: primary, width: 1.5),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.large),
+        ),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: surface,
+      ),
+      dividerTheme: const DividerThemeData(color: border),
+      chipTheme: ChipThemeData(
+        backgroundColor: surfaceMuted,
+        selectedColor: const Color(0xFF3B2D5C),
+        labelStyle: const TextStyle(color: textPrimary),
+        side: const BorderSide(color: border),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+      ),
+      navigationBarTheme: const NavigationBarThemeData(
+        backgroundColor: surface,
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: surfaceMuted,
+        contentTextStyle: const TextStyle(color: textPrimary),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.small),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: Colors.black,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+          ),
+          textStyle: const TextStyle(
+            inherit: true,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Plus Jakarta Sans',
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: primary,
+          side: BorderSide(color: primary, width: 1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+          ),
+          textStyle: const TextStyle(
+            inherit: true,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Plus Jakarta Sans',
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: primary,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          textStyle: const TextStyle(
+            inherit: true,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Plus Jakarta Sans',
+          ),
         ),
       ),
     );
