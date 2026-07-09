@@ -63,15 +63,33 @@ class _CourseListScreenState extends State<CourseListScreen> {
   String _getCategoryLabel(Course course) {
     // Parse category based on keywords in the course title
     final title = course.title.toLowerCase();
-    if (title.contains('python') || title.contains('programming') || title.contains('coding') || title.contains('java') || title.contains('c++')) {
+    if (title.contains('python') ||
+        title.contains('programming') ||
+        title.contains('coding') ||
+        title.contains('java') ||
+        title.contains('c++')) {
       return 'Programming';
-    } else if (title.contains('web') || title.contains('flask') || title.contains('html') || title.contains('development') || title.contains('django')) {
+    } else if (title.contains('web') ||
+        title.contains('flask') ||
+        title.contains('html') ||
+        title.contains('development') ||
+        title.contains('django')) {
       return 'Web Development';
-    } else if (title.contains('cyber') || title.contains('security') || title.contains('hack') || title.contains('network')) {
+    } else if (title.contains('cyber') ||
+        title.contains('security') ||
+        title.contains('hack') ||
+        title.contains('network')) {
       return 'Cybersecurity';
-    } else if (title.contains('design') || title.contains('ui') || title.contains('ux') || title.contains('figma') || title.contains('graphic')) {
+    } else if (title.contains('design') ||
+        title.contains('ui') ||
+        title.contains('ux') ||
+        title.contains('figma') ||
+        title.contains('graphic')) {
       return 'Design';
-    } else if (title.contains('data') || title.contains('analytics') || title.contains('science') || title.contains('machine')) {
+    } else if (title.contains('data') ||
+        title.contains('analytics') ||
+        title.contains('science') ||
+        title.contains('machine')) {
       return 'Data Science';
     }
     return 'General';
@@ -84,15 +102,18 @@ class _CourseListScreenState extends State<CourseListScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F1117) : const Color(0xFFF7F8FC),
+      backgroundColor:
+          isDark ? const Color(0xFF0F1117) : const Color(0xFFF7F8FC),
       floatingActionButton: isFaculty
           ? FloatingActionButton.extended(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CreateCourseScreen()),
-              ).then((_) {
-                if (mounted) context.read<CourseProvider>().fetchCourses();
-              }),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CreateCourseScreen()),
+                );
+                if (!context.mounted) return;
+                context.read<CourseProvider>().fetchCourses();
+              },
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.add, color: Colors.white),
               label: const Text(
@@ -145,7 +166,8 @@ class _CourseListScreenState extends State<CourseListScreen> {
         builder: (context, provider, _) {
           // Filtered list based on search query and category chips
           final filteredCourses = provider.courses.where((course) {
-            final matchesSearch = course.title.toLowerCase().contains(_searchQuery.toLowerCase());
+            final matchesSearch =
+                course.title.toLowerCase().contains(_searchQuery.toLowerCase());
             final matchesFilter = _selectedFilter == 'All' ||
                 (_selectedFilter == 'Free' && course.isFree) ||
                 (_selectedFilter == 'Paid' && !course.isFree);
@@ -174,7 +196,8 @@ class _CourseListScreenState extends State<CourseListScreen> {
                           onActionTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Explore course topics and enroll to start learning.'),
+                                content: Text(
+                                    'Explore course topics and enroll to start learning.'),
                                 behavior: SnackBarBehavior.floating,
                               ),
                             );
@@ -220,7 +243,8 @@ class _CourseListScreenState extends State<CourseListScreen> {
                           ),
                           sliver: SliverToBoxAdapter(
                             child: OfflineBanner(
-                              message: "You're offline. Showing saved course information.",
+                              message:
+                                  "You're offline. Showing saved course information.",
                               onRetry: () => provider.fetchCourses(),
                             ),
                           ),
@@ -230,8 +254,10 @@ class _CourseListScreenState extends State<CourseListScreen> {
 
                       // ── 5. Main Content Area (Lists / Grids / Skeletons / Errors) ──
                       SliverPadding(
-                        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                        sliver: _buildMainContent(provider, filteredCourses, isTablet),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: horizontalPadding),
+                        sliver: _buildMainContent(
+                            provider, filteredCourses, isTablet),
                       ),
 
                       // Bottom layout spacer to clear floating bottom navigation
@@ -249,7 +275,8 @@ class _CourseListScreenState extends State<CourseListScreen> {
     );
   }
 
-  Widget _buildMainContent(CourseProvider provider, List<Course> filteredCourses, bool isTablet) {
+  Widget _buildMainContent(
+      CourseProvider provider, List<Course> filteredCourses, bool isTablet) {
     // 1. Loading State
     if (provider.isLoading) {
       return const SliverToBoxAdapter(
@@ -317,7 +344,8 @@ class _CourseListScreenState extends State<CourseListScreen> {
         return SliverToBoxAdapter(
           child: CourseEmptyState(
             title: 'No courses available',
-            description: 'New courses will appear here when they are published.',
+            description:
+                'New courses will appear here when they are published.',
             icon: Icons.auto_stories_rounded,
             actionText: 'Refresh',
             onActionTap: () => provider.fetchCourses(),

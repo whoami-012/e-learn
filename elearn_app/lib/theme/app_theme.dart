@@ -144,7 +144,7 @@ class AppTheme {
   // Shadows
   static List<BoxShadow> softShadow = [
     BoxShadow(
-      color: AppColors.textPrimary.withOpacity(0.06),
+      color: AppColors.textPrimary.withValues(alpha: 0.06),
       blurRadius: 16,
       offset: const Offset(0, 8),
     ),
@@ -152,7 +152,7 @@ class AppTheme {
 
   static List<BoxShadow> miniShadow = [
     BoxShadow(
-      color: AppColors.textPrimary.withOpacity(0.04),
+      color: AppColors.textPrimary.withValues(alpha: 0.04),
       blurRadius: 8,
       offset: const Offset(0, 2),
     ),
@@ -160,7 +160,7 @@ class AppTheme {
 
   static List<BoxShadow> blueShadow = [
     BoxShadow(
-      color: AppColors.blue.withOpacity(0.2),
+      color: AppColors.blue.withValues(alpha: 0.2),
       blurRadius: 12,
       offset: const Offset(0, 6),
     ),
@@ -168,7 +168,7 @@ class AppTheme {
 
   static List<BoxShadow> purpleShadow = [
     BoxShadow(
-      color: AppColors.primary.withOpacity(0.2),
+      color: AppColors.primary.withValues(alpha: 0.2),
       blurRadius: 12,
       offset: const Offset(0, 6),
     ),
@@ -227,7 +227,6 @@ class AppTheme {
         secondary: AppColors.secondary,
         surface: AppColors.surface,
         error: AppColors.error,
-        background: AppColors.background,
         brightness: Brightness.light,
       ),
 
@@ -264,12 +263,12 @@ class AppTheme {
             fontSize: 14.0,
             fontWeight: FontWeight.normal,
             color: AppColors.textPrimary),
-        bodySmall: const TextStyle(
+        bodySmall: TextStyle(
             inherit: true,
             fontSize: 12.0,
             fontWeight: FontWeight.w500,
             color: AppColors.textSecondary),
-        labelLarge: const TextStyle(
+        labelLarge: TextStyle(
             inherit: true,
             fontSize: 14.0,
             fontWeight: FontWeight.w600,
@@ -473,7 +472,11 @@ class AppTheme {
           )
           .copyWith(
             bodySmall: const TextStyle(inherit: true, color: textSecondary),
-            labelLarge: const TextStyle(inherit: true, fontSize: 14.0, fontWeight: FontWeight.w600, color: textPrimary),
+            labelLarge: const TextStyle(
+                inherit: true,
+                fontSize: 14.0,
+                fontWeight: FontWeight.w600,
+                color: textPrimary),
           ),
       appBarTheme: const AppBarTheme(
         backgroundColor: background,

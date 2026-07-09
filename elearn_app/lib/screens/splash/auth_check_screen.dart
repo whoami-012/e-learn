@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/auth/role_route.dart';
 import '../../core/storage/token_storage.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_theme.dart';
 import '../auth/login_screen.dart';
 import '../home/home_screen.dart';
-import '../teacher_home_screen.dart';
+import '../../features/dashboard/presentation/screens/teacher_faculty_dashboard_screen.dart';
+import '../admin/admin_dashboard_screen.dart';
 
 /// AuthCheckScreen — App startup gate.
 ///
@@ -19,59 +22,102 @@ class AuthCheckScreen extends StatefulWidget {
 }
 
 class _AuthCheckScreenState extends State<AuthCheckScreen> {
-  // Store the future exactly once. If created inline in build(), FutureBuilder
-  // restarts on every rebuild and never resolves → infinite loading loop.
-  late final Future<bool> _sessionFuture;
+  Timer? _navigationTimer;
+  bool _isLoading = true;
+  bool _isAuthenticated = false;
+  String? _userRole;
 
   @override
   void initState() {
     super.initState();
-    _sessionFuture = _checkSession();
+    debugPrint("DEBUG: initState AuthCheckScreen");
+    _navigationTimer = Timer(
+      const Duration(milliseconds: 500),
+      _checkAuthentication,
+    );
   }
 
-  /// Checks for a valid token and pre-loads the user profile.
-  Future<bool> _checkSession() async {
-    final hasSession = await TokenStorage.hasSession();
-    if (hasSession && mounted) {
-      // Pre-load user so HomeScreen has role info immediately
-      await context.read<UserProvider>().loadUser();
-      if (mounted) {
-        final hasUser = context.read<UserProvider>().hasUser;
-        if (hasUser) {
-          return true;
-        } else {
-          // Token is invalid or expired. Clear tokens so they are redirected to login.
-          await TokenStorage.clearTokens();
+  @override
+  void dispose() {
+    _navigationTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkAuthentication() async {
+    debugPrint("DEBUG: Entering _checkAuthentication");
+    bool authenticated = false;
+    String? role;
+    final userProvider = context.read<UserProvider>();
+    try {
+      debugPrint("DEBUG: Checking TokenStorage.hasSession()...");
+      final hasSession = await TokenStorage.hasSession().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          debugPrint("DEBUG: TokenStorage.hasSession() TIMEOUT!");
           return false;
+        },
+      );
+      debugPrint("DEBUG: hasSession = $hasSession");
+      if (hasSession && mounted) {
+        debugPrint(
+            "DEBUG: Pre-loading user profile via UserProvider.loadUser()...");
+        await userProvider.loadUser().timeout(
+          const Duration(seconds: 4),
+          onTimeout: () {
+            debugPrint("DEBUG: UserProvider.loadUser() TIMEOUT!");
+          },
+        );
+        if (mounted) {
+          final hasUser = userProvider.hasUser;
+          debugPrint("DEBUG: hasUser = $hasUser");
+          if (hasUser) {
+            authenticated = true;
+            role = userProvider.user?.role;
+          } else {
+            debugPrint("DEBUG: Token invalid/expired. Clearing tokens...");
+            await TokenStorage.clearTokens();
+          }
         }
       }
+    } catch (e) {
+      debugPrint("DEBUG: Exception in _checkAuthentication: $e");
     }
-    return false;
+
+    if (!mounted) return;
+
+    setState(() {
+      _isAuthenticated = authenticated;
+      _userRole = role;
+      _isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
-      future: _sessionFuture, // ← same Future instance every build
-      builder: (context, snapshot) {
-        // ── Still checking ───────────────────────────────────────────────
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const _SplashView();
-        }
+    if (_isLoading) {
+      return const _SplashView();
+    }
 
-        // ── Session exists → Home ─────────────────────────────────────────
-        if (snapshot.data == true) {
-          final userRole = context.read<UserProvider>().user?.role;
-          if (userRole == 'faculty' || userRole == 'admin') {
-            return const TeacherHomeScreen();
-          }
+    if (_isAuthenticated) {
+      switch (resolveHomeRoute(_userRole)) {
+        case AppHomeRoute.faculty:
+          return const TeacherFacultyDashboardScreen();
+        case AppHomeRoute.admin:
+          return const AdminDashboardScreen();
+        case AppHomeRoute.student:
           return const HomeScreen();
-        }
+        case AppHomeRoute.login:
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            await TokenStorage.clearTokens();
+            if (context.mounted) {
+              context.read<UserProvider>().clearUser();
+            }
+          });
+          return const LoginScreen();
+      }
+    }
 
-        // ── No session → Login ────────────────────────────────────────────
-        return const LoginScreen();
-      },
-    );
+    return const LoginScreen();
   }
 }
 
@@ -106,7 +152,7 @@ class _SplashView extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.large),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.12),
+                      color: AppColors.primary.withValues(alpha: 0.12),
                       blurRadius: 24,
                       offset: const Offset(0, 12),
                     ),

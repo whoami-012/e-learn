@@ -92,7 +92,7 @@ class _ExamTakingScreenState extends State<ExamTakingScreen> {
               decoration: BoxDecoration(
                 color: AppColors.pastelPink,
                 borderRadius: BorderRadius.circular(AppRadius.pill),
-                border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -180,40 +180,43 @@ class _ExamTakingScreenState extends State<ExamTakingScreen> {
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            const SizedBox(height: AppSpacing.md),
-                            ...q.options.entries.map((entry) {
-                              final isSelected = _answers[q.id] == entry.key;
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                                decoration: BoxDecoration(
-                                  color: isSelected ? AppColors.primarySoft.withOpacity(0.4) : AppColors.surfaceMuted,
-                                  borderRadius: BorderRadius.circular(AppRadius.medium),
-                                  border: Border.all(
-                                    color: isSelected ? AppColors.primary : AppColors.border,
-                                    width: isSelected ? 1.5 : 1,
-                                  ),
-                                ),
-                                child: RadioListTile<String>(
-                                  title: Text(
-                                    entry.value,
-                                    style: TextStyle(
-                                      color: AppColors.textPrimary,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                      fontSize: 14,
+                            RadioGroup<String>(
+                              groupValue: _answers[q.id],
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() => _answers[q.id] = val);
+                                }
+                              },
+                              child: Column(
+                                children: q.options.entries.map((entry) {
+                                  final isSelected = _answers[q.id] == entry.key;
+                                  return Container(
+                                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? AppColors.primarySoft.withValues(alpha: 0.4) : AppColors.surfaceMuted,
+                                      borderRadius: BorderRadius.circular(AppRadius.medium),
+                                      border: Border.all(
+                                        color: isSelected ? AppColors.primary : AppColors.border,
+                                        width: isSelected ? 1.5 : 1,
+                                      ),
                                     ),
-                                  ),
-                                  value: entry.key,
-                                  groupValue: _answers[q.id],
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      setState(() => _answers[q.id] = val);
-                                    }
-                                  },
-                                  activeColor: AppColors.primary,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                                ),
-                              );
-                            }).toList(),
+                                    child: RadioListTile<String>(
+                                      title: Text(
+                                        entry.value,
+                                        style: TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      value: entry.key,
+                                      activeColor: AppColors.primary,
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
                           ],
                         ),
                       ),

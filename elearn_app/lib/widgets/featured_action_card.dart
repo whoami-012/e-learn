@@ -47,7 +47,7 @@ class FeaturedActionCard extends StatelessWidget {
                 height: 120,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.primarySoft.withOpacity(0.3), AppColors.pastelPink.withOpacity(0.2)],
+                    colors: [AppColors.primarySoft.withValues(alpha: 0.3), AppColors.pastelPink.withValues(alpha: 0.2)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -105,7 +105,7 @@ class FeaturedActionCard extends StatelessWidget {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withOpacity(0.3),
+                                color: AppColors.primary.withValues(alpha: 0.3),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),

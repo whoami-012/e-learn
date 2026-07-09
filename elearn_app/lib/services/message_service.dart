@@ -11,6 +11,27 @@ import '../core/storage/token_storage.dart';
 class MessageService {
   MessageService._();
 
+  static String _extractErrorMessage(
+    Map<String, dynamic> body, {
+    String fallback = 'Request failed.',
+  }) {
+    final detail = body['detail'];
+    if (detail is String && detail.isNotEmpty) {
+      return detail;
+    }
+    if (detail is Map<String, dynamic>) {
+      final message = detail['message'];
+      if (message is String && message.isNotEmpty) {
+        return message;
+      }
+      final code = detail['code'];
+      if (code is String && code.isNotEmpty) {
+        return code;
+      }
+    }
+    return fallback;
+  }
+
   static Map<String, dynamic> _handleResponse(http.Response response) {
     Map<String, dynamic> body = {};
     try {
@@ -28,9 +49,15 @@ class MessageService {
       case 401:
         throw const InvalidCredentialsException();
       case 403:
-        throw ServerException(403, (body['detail'] as String?) ?? 'Permission denied.');
+        throw ServerException(
+          403,
+          _extractErrorMessage(body, fallback: 'Permission denied.'),
+        );
       case 404:
-        throw ServerException(404, (body['detail'] as String?) ?? 'Not found.');
+        throw ServerException(
+          404,
+          _extractErrorMessage(body, fallback: 'Not found.'),
+        );
       case 422:
         final errors = body['detail'];
         String msg = 'Invalid request data';
@@ -38,12 +65,14 @@ class MessageService {
           msg = errors.first['msg'] ?? 'Validation error';
         } else if (errors is String) {
           msg = errors;
+        } else if (errors is Map<String, dynamic>) {
+          msg = _extractErrorMessage(body, fallback: msg);
         }
         throw ServerException(422, msg);
       default:
         throw ServerException(
           response.statusCode,
-          (body['detail'] as String?) ?? 'Request failed.',
+          _extractErrorMessage(body),
         );
     }
   }
@@ -58,9 +87,12 @@ class MessageService {
     final queryParams = <String, String>{};
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
     if (role != null && role.isNotEmpty) queryParams['role'] = role;
-    if (courseId != null && courseId.isNotEmpty) queryParams['course_id'] = courseId;
+    if (courseId != null && courseId.isNotEmpty) {
+      queryParams['course_id'] = courseId;
+    }
 
-    final uri = Uri.parse(AppConstants.messagesContactsEndpoint).replace(queryParameters: queryParams);
+    final uri = Uri.parse(AppConstants.messagesContactsEndpoint)
+        .replace(queryParameters: queryParams);
     try {
       final response = await ApiClient.get(uri, withAuth: true);
       return _handleResponse(response);
@@ -80,7 +112,8 @@ class MessageService {
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
     if (cursor != null && cursor.isNotEmpty) queryParams['cursor'] = cursor;
 
-    final uri = Uri.parse(AppConstants.messagesConversationsEndpoint).replace(queryParameters: queryParams);
+    final uri = Uri.parse(AppConstants.messagesConversationsEndpoint)
+        .replace(queryParameters: queryParams);
     try {
       final response = await ApiClient.get(uri, withAuth: true);
       return _handleResponse(response);
@@ -89,7 +122,8 @@ class MessageService {
     }
   }
 
-  static Future<Map<String, dynamic>> startConversation(String receiverId) async {
+  static Future<Map<String, dynamic>> startConversation(
+      String receiverId) async {
     final uri = Uri.parse(AppConstants.messagesConversationsEndpoint);
     try {
       final response = await ApiClient.post(
@@ -103,8 +137,10 @@ class MessageService {
     }
   }
 
-  static Future<Map<String, dynamic>> getConversation(String conversationId) async {
-    final uri = Uri.parse('${AppConstants.messagesConversationsEndpoint}/$conversationId');
+  static Future<Map<String, dynamic>> getConversation(
+      String conversationId) async {
+    final uri = Uri.parse(
+        '${AppConstants.messagesConversationsEndpoint}/$conversationId');
     try {
       final response = await ApiClient.get(uri, withAuth: true);
       return _handleResponse(response);
@@ -123,7 +159,8 @@ class MessageService {
     final queryParams = <String, String>{'limit': limit.toString()};
     if (cursor != null && cursor.isNotEmpty) queryParams['cursor'] = cursor;
 
-    final uri = Uri.parse('${AppConstants.messagesConversationsEndpoint}/$conversationId/messages')
+    final uri = Uri.parse(
+            '${AppConstants.messagesConversationsEndpoint}/$conversationId/messages')
         .replace(queryParameters: queryParams);
     try {
       final response = await ApiClient.get(uri, withAuth: true);
@@ -138,7 +175,8 @@ class MessageService {
     String content,
     String clientMessageId,
   ) async {
-    final uri = Uri.parse('${AppConstants.messagesConversationsEndpoint}/$conversationId/messages');
+    final uri = Uri.parse(
+        '${AppConstants.messagesConversationsEndpoint}/$conversationId/messages');
     try {
       final response = await ApiClient.post(
         uri,
@@ -164,7 +202,8 @@ class MessageService {
     if (token == null) throw const InvalidCredentialsException();
 
     try {
-      final uri = Uri.parse('${AppConstants.messagesConversationsEndpoint}/$conversationId/messages/upload');
+      final uri = Uri.parse(
+          '${AppConstants.messagesConversationsEndpoint}/$conversationId/messages/upload');
       final request = http.MultipartRequest('POST', uri);
 
       request.headers['Authorization'] = 'Bearer $token';
@@ -202,7 +241,7 @@ class MessageService {
         default:
           throw ServerException(
             streamed.statusCode,
-            (body['detail'] as String?) ?? 'Upload failed.',
+            _extractErrorMessage(body, fallback: 'Upload failed.'),
           );
       }
     } on SocketException {
@@ -210,8 +249,10 @@ class MessageService {
     }
   }
 
-  static Future<void> markRead(String conversationId, String lastReadMessageId) async {
-    final uri = Uri.parse('${AppConstants.messagesConversationsEndpoint}/$conversationId/read');
+  static Future<void> markRead(
+      String conversationId, String lastReadMessageId) async {
+    final uri = Uri.parse(
+        '${AppConstants.messagesConversationsEndpoint}/$conversationId/read');
     try {
       final response = await ApiClient.post(
         uri,
@@ -238,7 +279,8 @@ class MessageService {
   // ── Downloads / Attachment bytes ───────────────────────────────────────────
 
   static Future<http.Response> downloadAttachment(String attachmentId) async {
-    final uri = Uri.parse('${AppConstants.messagesAttachmentEndpoint}/$attachmentId');
+    final uri =
+        Uri.parse('${AppConstants.messagesAttachmentEndpoint}/$attachmentId');
     try {
       return await ApiClient.get(uri, withAuth: true);
     } on SocketException {
@@ -258,6 +300,16 @@ class MessageService {
         return 'image/png';
       case 'webp':
         return 'image/webp';
+      case 'mp4':
+        return 'video/mp4';
+      case 'mov':
+        return 'video/quicktime';
+      case '3gp':
+        return 'video/3gpp';
+      case 'webm':
+        return 'video/webm';
+      case 'mkv':
+        return 'video/x-matroska';
       case 'pdf':
         return 'application/pdf';
       case 'doc':

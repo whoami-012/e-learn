@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
 import '../dashboard/shimmer_skeletons.dart';
 
 /// Shimmer skeleton matching the exact heights and widths of the calendar grid.
@@ -37,7 +36,7 @@ class CalendarLoadingSkeleton extends StatelessWidget {
                 color: isDark ? const Color(0xFF181B23) : Colors.white,
                 borderRadius: BorderRadius.circular(26),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withOpacity(0.5),
+                  color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withValues(alpha: 0.5),
                 ),
               ),
               child: Column(
@@ -106,7 +105,7 @@ class CalendarLoadingSkeleton extends StatelessWidget {
                       color: isDark ? const Color(0xFF181B23) : Colors.white,
                       borderRadius: BorderRadius.circular(22),
                       border: Border.all(
-                        color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withOpacity(0.5),
+                        color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withValues(alpha: 0.5),
                       ),
                     ),
                     child: Row(

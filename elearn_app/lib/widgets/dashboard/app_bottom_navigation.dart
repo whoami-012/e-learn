@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
 
 class AppBottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -16,15 +15,31 @@ class AppBottomNavigation extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final theme = Theme.of(context);
     final items = [
-      _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home'),
-      _NavItem(icon: Icons.school_outlined, activeIcon: Icons.school_rounded, label: 'Courses'),
-      _NavItem(icon: Icons.calendar_month_outlined, activeIcon: Icons.calendar_month_rounded, label: 'Calendar'),
-      _NavItem(icon: Icons.chat_bubble_outline_rounded, activeIcon: Icons.chat_bubble_rounded, label: 'Messages'),
-      _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile'),
+      _NavItem(
+          icon: Icons.home_outlined,
+          activeIcon: Icons.home_rounded,
+          label: 'Home'),
+      _NavItem(
+          icon: Icons.school_outlined,
+          activeIcon: Icons.school_rounded,
+          label: 'Courses'),
+      _NavItem(
+          icon: Icons.calendar_month_outlined,
+          activeIcon: Icons.calendar_month_rounded,
+          label: 'Calendar'),
+      _NavItem(
+          icon: Icons.chat_bubble_outline_rounded,
+          activeIcon: Icons.chat_bubble_rounded,
+          label: 'Messages'),
+      _NavItem(
+          icon: Icons.person_outline_rounded,
+          activeIcon: Icons.person_rounded,
+          label: 'Profile'),
     ];
 
     final activeColor = theme.colorScheme.primary;
-    final inactiveColor = isDark ? const Color(0xFFADB4C4) : const Color(0xFF8E95A5);
+    final inactiveColor =
+        isDark ? const Color(0xFFADB4C4) : const Color(0xFF8E95A5);
 
     return Container(
       height: 72.0,
@@ -32,13 +47,15 @@ class AppBottomNavigation extends StatelessWidget {
         color: isDark ? const Color(0xFF181B23) : Colors.white,
         border: Border(
           top: BorderSide(
-            color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withOpacity(0.8),
+            color: isDark
+                ? const Color(0xFF303542)
+                : const Color(0xFFE9EBF2).withValues(alpha: 0.8),
             width: 1.0,
           ),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, -4),
           ),
@@ -71,7 +88,8 @@ class AppBottomNavigation extends StatelessWidget {
                       item.label,
                       style: TextStyle(
                         fontSize: 12.0,
-                        fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                        fontWeight:
+                            isActive ? FontWeight.bold : FontWeight.w500,
                         fontFamily: 'Plus Jakarta Sans',
                         color: color,
                       ),

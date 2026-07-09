@@ -26,7 +26,7 @@ class CourseListSkeleton extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: const Color(0xFFE9EBF2).withOpacity(0.5),
+                color: const Color(0xFFE9EBF2).withValues(alpha: 0.5),
                 width: 1,
               ),
             ),

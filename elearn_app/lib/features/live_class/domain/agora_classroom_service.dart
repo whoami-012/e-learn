@@ -95,9 +95,10 @@ class AgoraClassroomService extends ChangeNotifier {
                   : ClientRoleType.clientRoleAudience,
               publishCameraTrack: broadcaster,
               publishMicrophoneTrack: broadcaster));
-      if (!broadcaster)
+      if (!broadcaster) {
         _heartbeat = Timer.periodic(const Duration(seconds: 45),
             (_) => repository.heartbeat(value.liveClassId));
+      }
       _scheduleRefresh(value.tokenExpiresAt);
     } catch (e) {
       error = e.toString();

@@ -106,13 +106,13 @@ class MonthCalendarCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(26),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
               blurRadius: 22,
               offset: const Offset(0, 8),
             ),
           ],
           border: Border.all(
-            color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withOpacity(0.5),
+            color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withValues(alpha: 0.5),
             width: 1,
           ),
         ),
@@ -203,7 +203,7 @@ class CalendarMonthHeader extends StatelessWidget {
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           style: IconButton.styleFrom(
-            highlightColor: isDark ? theme.colorScheme.primary.withOpacity(0.2) : AppColors.primarySoft.withOpacity(0.4),
+            highlightColor: isDark ? theme.colorScheme.primary.withValues(alpha: 0.2) : AppColors.primarySoft.withValues(alpha: 0.4),
           ),
         ),
 
@@ -236,7 +236,7 @@ class CalendarMonthHeader extends StatelessWidget {
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
           style: IconButton.styleFrom(
-            highlightColor: isDark ? theme.colorScheme.primary.withOpacity(0.2) : AppColors.primarySoft.withOpacity(0.4),
+            highlightColor: isDark ? theme.colorScheme.primary.withValues(alpha: 0.2) : AppColors.primarySoft.withValues(alpha: 0.4),
           ),
         ),
       ],
@@ -310,7 +310,7 @@ class CalendarDateCell extends StatelessWidget {
     } else if (enabled) {
       textColor = isDark ? Colors.white : const Color(0xFF101936);
     } else {
-      textColor = isDark ? const Color(0xFFADB4C4).withOpacity(0.4) : const Color(0xFF8E95A5).withOpacity(0.5);
+      textColor = isDark ? const Color(0xFFADB4C4).withValues(alpha: 0.4) : const Color(0xFF8E95A5).withValues(alpha: 0.5);
     }
 
     return Semantics(
@@ -329,14 +329,14 @@ class CalendarDateCell extends StatelessWidget {
             shape: BoxShape.circle,
             color: isSelected
                 ? theme.colorScheme.primary
-                : (cell.isToday ? (isDark ? theme.colorScheme.primary.withOpacity(0.25) : AppColors.primarySoft.withOpacity(0.5)) : Colors.transparent),
+                : (cell.isToday ? (isDark ? theme.colorScheme.primary.withValues(alpha: 0.25) : AppColors.primarySoft.withValues(alpha: 0.5)) : Colors.transparent),
             border: (cell.isToday && !isSelected)
-                ? Border.all(color: theme.colorScheme.primary.withOpacity(0.5), width: 1.5)
+                ? Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.5), width: 1.5)
                 : null,
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.25),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.25),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),

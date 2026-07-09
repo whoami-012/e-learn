@@ -15,8 +15,8 @@ class AuthException implements Exception {
 
 /// Thrown when the server returns 401 — wrong email/password.
 class InvalidCredentialsException extends AuthException {
-  const InvalidCredentialsException()
-      : super('Invalid email or password. Please try again.');
+  const InvalidCredentialsException([String? message])
+      : super(message ?? 'Invalid email or password. Please try again.');
 }
 
 /// Thrown when the account is inactive or deleted (403).
@@ -33,5 +33,13 @@ class ServerException extends AuthException {
 /// Thrown when the device has no internet connection or the server is unreachable.
 class NetworkException extends AuthException {
   const NetworkException()
-      : super('Unable to reach the server. Check your internet connection.');
+      : super('Network error. Please check your connection.');
+}
+
+class GoogleLoginException extends AuthException {
+  const GoogleLoginException(super.message);
+}
+
+class AppleLoginException extends AuthException {
+  const AppleLoginException(super.message);
 }

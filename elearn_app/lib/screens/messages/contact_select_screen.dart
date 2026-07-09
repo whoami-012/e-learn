@@ -256,7 +256,7 @@ class _ContactSelectScreenState extends State<ContactSelectScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       itemCount: contacts.length,
                       separatorBuilder: (_, __) => Divider(
-                        color: const Color(0xFFE9EBF2).withOpacity(0.5),
+                        color: const Color(0xFFE9EBF2).withValues(alpha: 0.5),
                         height: 1,
                       ),
                       itemBuilder: (context, index) {

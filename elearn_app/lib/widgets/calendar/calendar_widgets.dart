@@ -35,13 +35,13 @@ class CalendarScreenHeader extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
                   ],
                   border: Border.all(
-                    color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withOpacity(0.6),
+                    color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withValues(alpha: 0.6),
                     width: 1,
                   ),
                 ),
@@ -79,13 +79,13 @@ class CalendarScreenHeader extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
                 border: Border.all(
-                  color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withOpacity(0.6),
+                  color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withValues(alpha: 0.6),
                   width: 1,
                 ),
               ),
@@ -199,7 +199,7 @@ class LiveEventBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(99),
         boxShadow: [
           BoxShadow(
-            color: Colors.red.withOpacity(isDark ? 0.2 : 0.1),
+            color: Colors.red.withValues(alpha: isDark ? 0.2 : 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -311,7 +311,7 @@ class EventSubjectIcon extends StatelessWidget {
       width: 58,
       height: 58,
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.12) : Colors.white.withOpacity(0.85),
+        color: isDark ? Colors.white.withValues(alpha: 0.12) : Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Center(

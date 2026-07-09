@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/auth/role_route.dart';
 import '../../core/exceptions/auth_exception.dart';
 import '../../providers/user_provider.dart';
 import '../../services/auth_service.dart';
 import '../home/home_screen.dart';
-import '../teacher_home_screen.dart';
+import '../../features/dashboard/presentation/screens/teacher_faculty_dashboard_screen.dart';
+import '../admin/admin_dashboard_screen.dart';
 import 'register_screen.dart';
+
 import '../../theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -20,12 +23,14 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
-  final _emailController = TextEditingController(text: 'student@elearn.com');
-  final _passwordController = TextEditingController(text: 'Student@123');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   // UI state
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
+  bool _isAppleLoading = false;
 
   @override
   void dispose() {
@@ -67,25 +72,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await AuthService.login(
-        email:    _emailController.text.trim(),
+        email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
-      // Load user into provider for role-based UI
       if (!mounted) return;
       await context.read<UserProvider>().loadUser();
-      
-      final userRole = context.read<UserProvider>().user?.role;
-      Widget targetScreen = const HomeScreen();
-      if (userRole == 'faculty' || userRole == 'admin') {
-        targetScreen = const TeacherHomeScreen();
-      }
-
-      // Navigate to Home or Teacher Home
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => targetScreen),
-      );
+      _navigateAfterLogin();
     } on AuthException catch (e) {
       // Typed error — show specific message from the exception
       if (!mounted) return;
@@ -94,13 +87,75 @@ class _LoginScreenState extends State<LoginScreen> {
           content: Text(e.message),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.small)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.small)),
           margin: const EdgeInsets.all(AppSpacing.md),
         ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _onGoogleLogin() async {
+    if (_isGoogleLoading || _isLoading) return;
+    setState(() => _isGoogleLoading = true);
+
+    try {
+      final response = await AuthService.signInWithGoogle();
+      if (response == null || !mounted) return;
+      context.read<UserProvider>().setUser(response.user);
+      _navigateAfterLogin();
+    } on AuthException catch (error) {
+      if (mounted) _showError(error.message);
+    } catch (_) {
+      if (mounted) _showError('Google login failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
+    }
+  }
+
+  Future<void> _onAppleLogin() async {
+    if (_isAppleLoading || _isLoading || _isGoogleLoading) return;
+    setState(() => _isAppleLoading = true);
+    try {
+      final response = await AuthService.signInWithApple();
+      if (response == null || !mounted) return;
+      context.read<UserProvider>().setUser(response.user);
+      _navigateAfterLogin();
+    } on AuthException catch (error) {
+      if (mounted) _showError(error.message);
+    } finally {
+      if (mounted) setState(() => _isAppleLoading = false);
+    }
+  }
+
+  void _navigateAfterLogin() {
+    if (!mounted) return;
+    final role = context.read<UserProvider>().user?.role;
+    final target = switch (resolveHomeRoute(role)) {
+      AppHomeRoute.faculty => const TeacherFacultyDashboardScreen(),
+      AppHomeRoute.admin => const AdminDashboardScreen(),
+      AppHomeRoute.student => const HomeScreen(),
+      AppHomeRoute.login => const LoginScreen(),
+    };
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => target),
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.small),
+        ),
+        margin: const EdgeInsets.all(AppSpacing.md),
+      ),
+    );
   }
 
   // ── Build ────────────────────────────────────────────────────────────────────
@@ -116,7 +171,8 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Center(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
             child: Form(
               key: _formKey,
               child: Column(
@@ -206,7 +262,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: GestureDetector(
                                 onTap: () {
                                   Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                                    MaterialPageRoute(
+                                        builder: (_) => const RegisterScreen()),
                                   );
                                 },
                                 child: Column(
@@ -252,7 +309,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           validator: _validateEmail,
                           decoration: const InputDecoration(
                             hintText: 'you@example.com',
-                            prefixIcon: Icon(Icons.email_outlined, size: 20, color: AppColors.textSecondary),
+                            prefixIcon: Icon(Icons.email_outlined,
+                                size: 20, color: AppColors.textSecondary),
                           ),
                         ),
 
@@ -292,7 +350,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           validator: _validatePassword,
                           decoration: InputDecoration(
                             hintText: '••••••••',
-                            prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20, color: AppColors.textSecondary),
+                            prefixIcon: const Icon(Icons.lock_outline_rounded,
+                                size: 20, color: AppColors.textSecondary),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _isPasswordVisible
@@ -304,7 +363,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               onPressed: () => setState(
                                 () => _isPasswordVisible = !_isPasswordVisible,
                               ),
-                              tooltip: _isPasswordVisible ? 'Hide password' : 'Show password',
+                              tooltip: _isPasswordVisible
+                                  ? 'Hide password'
+                                  : 'Show password',
                             ),
                           ),
                         ),
@@ -315,14 +376,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(
                           height: 52,
                           child: ElevatedButton(
-                            onPressed: _isLoading ? null : _onLogin,
+                            onPressed: _isLoading ||
+                                    _isGoogleLoading ||
+                                    _isAppleLoading
+                                ? null
+                                : _onLogin,
                             child: _isLoading
                                 ? const SizedBox(
                                     width: 22,
                                     height: 22,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
                                     ),
                                   )
                                 : const Text('Sign In'),
@@ -339,7 +405,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const Expanded(child: Divider()),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md),
                         child: Text(
                           'Or sign in with',
                           style: textTheme.bodySmall?.copyWith(
@@ -353,22 +420,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: AppSpacing.md),
 
-                  // Social Auth buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _SocialAuthButton(
-                        icon: Icons.g_mobiledata_rounded,
-                        label: 'Google',
-                        onTap: () {},
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      _SocialAuthButton(
-                        icon: Icons.apple_rounded,
-                        label: 'Apple',
-                        onTap: () {},
-                      ),
-                    ],
+                  _SocialAuthButton(
+                    icon: Icons.g_mobiledata_rounded,
+                    label: 'Continue with Google',
+                    isLoading: _isGoogleLoading,
+                    onTap: _isLoading || _isGoogleLoading || _isAppleLoading
+                        ? null
+                        : _onGoogleLogin,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _SocialAuthButton(
+                    icon: Icons.apple_rounded,
+                    label: 'Continue with Apple',
+                    isLoading: _isAppleLoading,
+                    onTap: _isLoading || _isGoogleLoading || _isAppleLoading
+                        ? null
+                        : _onAppleLogin,
                   ),
                 ],
               ),
@@ -383,12 +450,14 @@ class _LoginScreenState extends State<LoginScreen> {
 class _SocialAuthButton extends StatelessWidget {
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool isLoading;
 
   const _SocialAuthButton({
     required this.icon,
     required this.label,
     required this.onTap,
+    this.isLoading = false,
   });
 
   @override
@@ -397,7 +466,8 @@ class _SocialAuthButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.medium),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm + 4),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg, vertical: AppSpacing.sm + 4),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.medium),
@@ -406,7 +476,14 @@ class _SocialAuthButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 28, color: AppColors.textPrimary),
+            if (isLoading)
+              const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              )
+            else
+              Icon(icon, size: 28, color: AppColors.textPrimary),
             const SizedBox(width: AppSpacing.sm),
             Text(
               label,

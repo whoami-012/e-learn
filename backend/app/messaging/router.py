@@ -50,7 +50,42 @@ def participant_response(user: User) -> ParticipantResponse:
 
 
 def message_response(message: Message) -> MessageResponse:
-    return MessageResponse.model_validate(message)
+    attachment = message.attachment
+    attachment_response = None
+    attachment_url = None
+    if attachment is not None:
+        attachment_url = f"/api/v1/messages/attachments/{attachment.id}"
+        attachment_response = {
+            "id": attachment.id,
+            "original_filename": attachment.original_filename,
+            "mime_type": attachment.mime_type,
+            "attachment_type": attachment.attachment_type,
+            "file_extension": attachment.file_extension,
+            "file_size": attachment.file_size,
+            "checksum": attachment.checksum,
+            "attachment_url": attachment_url,
+            "file_name": attachment.original_filename,
+            "thumbnail_url": attachment.thumbnail_url,
+        }
+    return MessageResponse(
+        id=message.id,
+        conversation_id=message.conversation_id,
+        sender_id=message.sender_id,
+        message_type=message.message_type,
+        content=message.content,
+        created_at=message.created_at,
+        updated_at=message.updated_at,
+        edited_at=message.edited_at,
+        deleted_at=message.deleted_at,
+        client_message_id=message.client_message_id,
+        attachment=attachment_response,
+        attachment_url=attachment_url,
+        attachment_type=attachment.attachment_type if attachment else None,
+        mime_type=attachment.mime_type if attachment else None,
+        file_name=attachment.original_filename if attachment else None,
+        file_size=attachment.file_size if attachment else None,
+        thumbnail_url=attachment.thumbnail_url if attachment else None,
+    )
 
 
 async def conversation_detail(service: MessagingService, conversation_id: UUID, current_user: User):
@@ -151,6 +186,11 @@ async def list_conversations(
                 created_at=last.created_at,
                 is_sent_by_current_user=last.sender_id == current_user.id,
                 has_attachment=last.attachment is not None,
+                attachment_type=last.attachment.attachment_type if last.attachment else None,
+                mime_type=last.attachment.mime_type if last.attachment else None,
+                file_name=last.attachment.original_filename if last.attachment else None,
+                file_size=last.attachment.file_size if last.attachment else None,
+                thumbnail_url=last.attachment.thumbnail_url if last.attachment else None,
             )
         items.append(
             ConversationSummaryResponse(
@@ -197,8 +237,15 @@ async def send_message(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    message = await MessagingService(db).send_text(
+    service = MessagingService(db)
+    conversation, _ = await service.authorize_conversation(conversation_id, current_user)
+    message = await service.send_text(
         conversation_id, current_user, payload.content, payload.client_message_id
+    )
+    await connection_manager.send_to_users(
+        {conversation.participant_one_id, conversation.participant_two_id},
+        conversation.id,
+        {"event": "message.created", "data": message_response(message).model_dump(mode="json")},
     )
     return message_response(message)
 
@@ -213,12 +260,17 @@ async def send_message_upload(
     db: AsyncSession = Depends(get_db),
 ):
     service = MessagingService(db)
-    await service.authorize_conversation(conversation_id, current_user)
+    conversation, _ = await service.authorize_conversation(conversation_id, current_user)
     storage = get_message_storage()
     temp_dir = Path(settings.MESSAGE_LOCAL_STORAGE_PATH).resolve() / ".tmp"
     validated = await stream_and_validate_upload(file, temp_dir)
     message = await service.send_upload(
         conversation_id, current_user, content, client_message_id, validated, storage
+    )
+    await connection_manager.send_to_users(
+        {conversation.participant_one_id, conversation.participant_two_id},
+        conversation.id,
+        {"event": "message.created", "data": message_response(message).model_dump(mode="json")},
     )
     return message_response(message)
 
@@ -230,7 +282,18 @@ async def mark_conversation_read(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await MessagingService(db).mark_read(conversation_id, current_user, payload.last_read_message_id)
+    service = MessagingService(db)
+    conversation, _ = await service.authorize_conversation(conversation_id, current_user)
+    await service.mark_read(conversation_id, current_user, payload.last_read_message_id)
+    await connection_manager.send_to_users(
+        {conversation.participant_one_id, conversation.participant_two_id},
+        conversation.id,
+        {
+            "event": "message.read",
+            "conversation_id": str(conversation.id),
+            "user_id": str(current_user.id),
+        },
+    )
 
 
 @router.get("/attachments/{attachment_id}")

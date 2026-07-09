@@ -75,12 +75,14 @@ class _PreJoinScreenState extends State<PreJoinScreen> {
                                       start: faculty &&
                                           widget.liveClass.status ==
                                               'scheduled');
-                              if (value != null && mounted)
+                              if (value != null) {
+                                if (!context.mounted) return;
                                 Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
                                         builder: (_) => ClassroomScreen(
                                             credentials: value)));
+                              }
                             },
                       child: controller.isJoining
                           ? const SizedBox.square(

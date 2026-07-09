@@ -98,11 +98,11 @@ class _CalendarEventCardState extends State<CalendarEventCard> {
           padding: const EdgeInsets.only(bottom: 12.0),
           child: Container(
             decoration: BoxDecoration(
-              color: isDark ? widget.colorScheme.accent.withOpacity(0.15) : widget.colorScheme.background,
+              color: isDark ? widget.colorScheme.accent.withValues(alpha: 0.15) : widget.colorScheme.background,
               borderRadius: BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -117,8 +117,8 @@ class _CalendarEventCardState extends State<CalendarEventCard> {
                   onTapDown: (_) => setState(() => _scale = 0.985),
                   onTapUp: (_) => setState(() => _scale = 1.0),
                   onTapCancel: () => setState(() => _scale = 1.0),
-                  splashColor: widget.colorScheme.accent.withOpacity(0.08),
-                  highlightColor: widget.colorScheme.accent.withOpacity(0.02),
+                  splashColor: widget.colorScheme.accent.withValues(alpha: 0.08),
+                  highlightColor: widget.colorScheme.accent.withValues(alpha: 0.02),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
@@ -135,7 +135,7 @@ class _CalendarEventCardState extends State<CalendarEventCard> {
                         Container(
                           width: 1.5,
                           height: 60,
-                          color: widget.colorScheme.accent.withOpacity(0.2),
+                          color: widget.colorScheme.accent.withValues(alpha: 0.2),
                         ),
                         const SizedBox(width: 14),
 

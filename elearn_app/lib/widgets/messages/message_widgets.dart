@@ -69,7 +69,9 @@ class MessagesHeader extends StatelessWidget {
                     ),
                   ],
                   border: Border.all(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE9EBF2),
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : const Color(0xFFE9EBF2),
                     width: 1,
                   ),
                 ),
@@ -107,7 +109,9 @@ class MessageSearchBar extends StatelessWidget {
       child: Container(
         height: 52,
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF3F1FD), // Soft gray/lavender
+          color: isDark
+              ? const Color(0xFF1E293B)
+              : const Color(0xFFF3F1FD), // Soft gray/lavender
           borderRadius: BorderRadius.circular(16),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -190,7 +194,11 @@ class MessageFilterChips extends StatelessWidget {
               curve: Curves.easeInOut,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF3EFFF)),
+                color: isSelected
+                    ? AppColors.primary
+                    : (isDark
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFF3EFFF)),
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: isSelected
                     ? [
@@ -208,7 +216,9 @@ class MessageFilterChips extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : (isDark ? const Color(0xFF94A3B8) : AppColors.primary),
+                  color: isSelected
+                      ? Colors.white
+                      : (isDark ? const Color(0xFF94A3B8) : AppColors.primary),
                   fontFamily: 'Plus Jakarta Sans',
                 ),
               ),
@@ -363,17 +373,23 @@ class MessageTypeBadge extends StatelessWidget {
     switch (type) {
       case MessageType.mentor:
         label = 'Mentor';
-        bgColor = isDark ? const Color(0xFF3B0764).withOpacity(0.4) : const Color(0xFFF3EFFF);
+        bgColor = isDark
+            ? const Color(0xFF3B0764).withValues(alpha: 0.4)
+            : const Color(0xFFF3EFFF);
         textColor = isDark ? const Color(0xFFD8B4FE) : AppColors.primary;
         break;
       case MessageType.group:
         label = 'Group';
-        bgColor = isDark ? const Color(0xFF1E3A8A).withOpacity(0.4) : const Color(0xFFE2F1FF);
+        bgColor = isDark
+            ? const Color(0xFF1E3A8A).withValues(alpha: 0.4)
+            : const Color(0xFFE2F1FF);
         textColor = isDark ? const Color(0xFF93C5FD) : const Color(0xFF2D7CEB);
         break;
       case MessageType.announcement:
         label = 'Official';
-        bgColor = isDark ? const Color(0xFF064E3B).withOpacity(0.4) : const Color(0xFFE2F7EF);
+        bgColor = isDark
+            ? const Color(0xFF064E3B).withValues(alpha: 0.4)
+            : const Color(0xFFE2F7EF);
         textColor = isDark ? const Color(0xFF6EE7B7) : const Color(0xFF219653);
         break;
       default:
@@ -476,8 +492,9 @@ class _MessageTileState extends State<MessageTile> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Semantics(
-      label: '${widget.conversation.name}, ${widget.conversation.lastMessage}, ${_formatTime(widget.conversation.timestamp)}'
-          '${isUnread ? ", " + widget.conversation.unreadCount.toString() + " unread messages" : ""}. Double tap to open.',
+      label:
+          '${widget.conversation.name}, ${widget.conversation.lastMessage}, ${_formatTime(widget.conversation.timestamp)}'
+          '${isUnread ? ", ${widget.conversation.unreadCount} unread messages" : ""}. Double tap to open.',
       button: true,
       onTap: widget.onTap,
       child: AnimatedScale(
@@ -490,7 +507,8 @@ class _MessageTileState extends State<MessageTile> {
           onTapUp: (_) => setState(() => _scale = 1.0),
           onTapCancel: () => setState(() => _scale = 1.0),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -516,8 +534,12 @@ class _MessageTileState extends State<MessageTile> {
                               widget.conversation.name,
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
-                                color: isDark ? Colors.white : const Color(0xFF101936),
+                                fontWeight: isUnread
+                                    ? FontWeight.bold
+                                    : FontWeight.w600,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF101936),
                                 fontFamily: 'Plus Jakarta Sans',
                               ),
                               maxLines: 1,
@@ -534,10 +556,15 @@ class _MessageTileState extends State<MessageTile> {
                         widget.conversation.lastMessage,
                         style: TextStyle(
                           fontSize: 13.5,
-                          fontWeight: isUnread ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight:
+                              isUnread ? FontWeight.w600 : FontWeight.w500,
                           color: isUnread
-                              ? (isDark ? Colors.white : const Color(0xFF101936))
-                              : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF6F7588)),
+                              ? (isDark
+                                  ? Colors.white
+                                  : const Color(0xFF101936))
+                              : (isDark
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF6F7588)),
                           fontFamily: 'Plus Jakarta Sans',
                         ),
                         maxLines: 1,
@@ -557,10 +584,13 @@ class _MessageTileState extends State<MessageTile> {
                       _formatTime(widget.conversation.timestamp),
                       style: TextStyle(
                         fontSize: 11.5,
-                        fontWeight: isUnread ? FontWeight.bold : FontWeight.w500,
+                        fontWeight:
+                            isUnread ? FontWeight.bold : FontWeight.w500,
                         color: isUnread
                             ? AppColors.primary
-                            : (isDark ? const Color(0xFF64748B) : const Color(0xFF8E95A5)),
+                            : (isDark
+                                ? const Color(0xFF64748B)
+                                : const Color(0xFF8E95A5)),
                         fontFamily: 'Plus Jakarta Sans',
                       ),
                     ),
@@ -606,7 +636,9 @@ class MessageListCard extends StatelessWidget {
             ),
           ],
           border: Border.all(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFE9EBF2).withValues(alpha: 0.5),
+            color: isDark
+                ? const Color(0xFF334155)
+                : const Color(0xFFE9EBF2).withValues(alpha: 0.5),
             width: 1,
           ),
         ),
@@ -618,7 +650,9 @@ class MessageListCard extends StatelessWidget {
             padding: EdgeInsets.zero,
             itemCount: conversations.length,
             separatorBuilder: (context, index) => Divider(
-              color: isDark ? const Color(0xFF334155) : const Color(0xFFE9EBF2).withValues(alpha: 0.4),
+              color: isDark
+                  ? const Color(0xFF334155)
+                  : const Color(0xFFE9EBF2).withValues(alpha: 0.4),
               height: 1,
               indent: 84,
               endIndent: 16,
@@ -727,7 +761,9 @@ class MessagesErrorState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24.0),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF7F1D1D).withOpacity(0.4) : const Color(0xFFFFECEC),
+                color: isDark
+                    ? const Color(0xFF7F1D1D).withValues(alpha: 0.4)
+                    : const Color(0xFFFFECEC),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -752,7 +788,8 @@ class MessagesErrorState extends StatelessWidget {
               description,
               style: TextStyle(
                 fontSize: 13.5,
-                color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF6F7588),
+                color:
+                    isDark ? const Color(0xFF94A3B8) : const Color(0xFF6F7588),
                 height: 1.4,
                 fontFamily: 'Plus Jakarta Sans',
               ),
@@ -763,7 +800,8 @@ class MessagesErrorState extends StatelessWidget {
               onPressed: onRetry,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF5757),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -798,12 +836,14 @@ class MessagesLoadingSkeleton extends StatelessWidget {
         children: [
           // Header search placeholder
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
             child: const ShimmerBox(height: 52, borderRadius: 16),
           ),
           // Chips switcher shimmers
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
             child: Row(
               children: List.generate(
                 3,
@@ -824,7 +864,9 @@ class MessagesLoadingSkeleton extends StatelessWidget {
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE9EBF2).withValues(alpha: 0.5),
+                  color: isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE9EBF2).withValues(alpha: 0.5),
                 ),
               ),
               child: Column(
@@ -834,7 +876,8 @@ class MessagesLoadingSkeleton extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 18.0),
                     child: Row(
                       children: [
-                        const ShimmerBox(width: 54, height: 54, borderRadius: 27),
+                        const ShimmerBox(
+                            width: 54, height: 54, borderRadius: 27),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
@@ -842,13 +885,18 @@ class MessagesLoadingSkeleton extends StatelessWidget {
                             children: [
                               Row(
                                 children: [
-                                  const ShimmerBox(width: 120, height: 16, borderRadius: 4),
+                                  const ShimmerBox(
+                                      width: 120, height: 16, borderRadius: 4),
                                   const SizedBox(width: 8),
-                                  const ShimmerBox(width: 50, height: 16, borderRadius: 6),
+                                  const ShimmerBox(
+                                      width: 50, height: 16, borderRadius: 6),
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              const ShimmerBox(width: double.infinity, height: 13, borderRadius: 4),
+                              const ShimmerBox(
+                                  width: double.infinity,
+                                  height: 13,
+                                  borderRadius: 4),
                             ],
                           ),
                         ),

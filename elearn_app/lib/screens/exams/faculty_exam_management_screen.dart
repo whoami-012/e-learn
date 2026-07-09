@@ -78,14 +78,15 @@ class _FacultyExamManagementScreenState
                         return;
                       }
                       setDlg(() => isSubmitting = true);
+                      final messenger = ScaffoldMessenger.of(context);
                       try {
                         await context
                             .read<ExamProvider>()
                             .createExam(widget.courseId, title, dur);
-                        if (mounted) Navigator.pop(ctx);
+                        if (ctx.mounted) Navigator.pop(ctx);
                       } catch (e) {
                         setDlg(() => isSubmitting = false);
-                        ScaffoldMessenger.of(ctx).showSnackBar(
+                        messenger.showSnackBar(
                           SnackBar(content: Text('Error: $e')),
                         );
                       }
@@ -427,6 +428,7 @@ class _QuestionManagementScreenState
                         return;
                       }
                       setDlg(() => isSubmitting = true);
+                      final messenger = ScaffoldMessenger.of(context);
                       try {
                         await context.read<ExamProvider>().addQuestion(
                               widget.exam.id,
@@ -434,10 +436,10 @@ class _QuestionManagementScreenState
                               {'A': a, 'B': b, 'C': c, 'D': d},
                               correctOption,
                             );
-                        if (mounted) Navigator.pop(ctx);
+                        if (ctx.mounted) Navigator.pop(ctx);
                       } catch (e) {
                         setDlg(() => isSubmitting = false);
-                        ScaffoldMessenger.of(ctx).showSnackBar(
+                        messenger.showSnackBar(
                           SnackBar(content: Text('Error: $e')),
                         );
                       }
@@ -644,7 +646,7 @@ class _QuestionCard extends StatelessWidget {
                       width: 22,
                       height: 22,
                       decoration: BoxDecoration(
-                        color: isCorrect ? AppColors.success : AppColors.textSecondary.withOpacity(0.2),
+                        color: isCorrect ? AppColors.success : AppColors.textSecondary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(AppRadius.small - 4),
                       ),
                       alignment: Alignment.center,

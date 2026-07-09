@@ -61,6 +61,9 @@ class Attachment {
   final String fileExtension;
   final int fileSize;
   final String checksum;
+  final String attachmentType;
+  final String? attachmentUrl;
+  final String? thumbnailUrl;
 
   Attachment({
     required this.id,
@@ -69,18 +72,46 @@ class Attachment {
     required this.fileExtension,
     required this.fileSize,
     required this.checksum,
+    required this.attachmentType,
+    this.attachmentUrl,
+    this.thumbnailUrl,
   });
 
   factory Attachment.fromJson(Map<String, dynamic> json) {
     return Attachment(
       id: json['id'] as String,
-      originalFilename: json['original_filename'] as String,
-      mimeType: json['mime_type'] as String,
-      fileExtension: json['file_extension'] as String,
-      fileSize: json['file_size'] as int,
-      checksum: json['checksum'] as String,
+      originalFilename: (json['file_name'] ??
+          json['original_filename'] ??
+          'Attachment') as String,
+      mimeType: (json['mime_type'] ?? 'application/octet-stream') as String,
+      fileExtension: (json['file_extension'] ?? '') as String,
+      fileSize: (json['file_size'] as num?)?.toInt() ?? 0,
+      checksum: (json['checksum'] ?? '') as String,
+      attachmentType: (json['attachment_type'] ??
+          _typeFromMime(json['mime_type'] as String?)) as String,
+      attachmentUrl: json['attachment_url'] as String?,
+      thumbnailUrl: json['thumbnail_url'] as String?,
     );
   }
+
+  static String _typeFromMime(String? mimeType) {
+    if (mimeType?.startsWith('image/') ?? false) return 'image';
+    if (mimeType?.startsWith('video/') ?? false) return 'video';
+    return 'file';
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'original_filename': originalFilename,
+        'file_name': originalFilename,
+        'mime_type': mimeType,
+        'attachment_type': attachmentType,
+        'file_extension': fileExtension,
+        'file_size': fileSize,
+        'checksum': checksum,
+        'attachment_url': attachmentUrl,
+        'thumbnail_url': thumbnailUrl,
+      };
 }
 
 class Message {
@@ -93,6 +124,20 @@ class Message {
   final String? clientMessageId;
   final Attachment? attachment;
   final bool isPending;
+  final String status;
+
+  /// Local file path used only for optimistic/pending file messages
+  /// so the UI can show an image/video preview while the upload is in progress.
+  final String? localFilePath;
+
+  String? get attachmentUrl => attachment?.attachmentUrl;
+  String? get attachmentType => attachment?.attachmentType;
+  String? get mimeType => attachment?.mimeType;
+  String? get fileName =>
+      attachment?.originalFilename ??
+      localFilePath?.split(Platform.pathSeparator).last;
+  int? get fileSize => attachment?.fileSize;
+  String? get thumbnailUrl => attachment?.thumbnailUrl;
 
   Message({
     required this.id,
@@ -104,23 +149,81 @@ class Message {
     this.clientMessageId,
     this.attachment,
     this.isPending = false,
+    this.status = 'sent',
+    this.localFilePath,
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
+    final createdAtRaw = json['created_at'];
+    final createdAt = createdAtRaw == null
+        ? DateTime.now()
+        : DateTime.parse(createdAtRaw.toString()).toLocal();
+
     return Message(
-      id: json['id'] as String,
-      conversationId: json['conversation_id'] as String,
-      senderId: json['sender_id'] as String,
-      type: json['message_type'] as String,
-      content: json['content'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String).toLocal(),
-      clientMessageId: json['client_message_id'] as String?,
+      id: json['id'].toString(),
+      conversationId: json['conversation_id'].toString(),
+      senderId: json['sender_id'].toString(),
+      type: (json['message_type'] ?? 'text').toString(),
+      content: json['content']?.toString(),
+      createdAt: createdAt,
+      clientMessageId: json['client_message_id']?.toString(),
       attachment: json['attachment'] != null
           ? Attachment.fromJson(json['attachment'] as Map<String, dynamic>)
           : null,
       isPending: false,
+      status: (json['status'] ?? 'sent').toString(),
     );
   }
+
+  Message copyWith({bool? isPending, String? status}) => Message(
+        id: id,
+        conversationId: conversationId,
+        senderId: senderId,
+        type: type,
+        content: content,
+        createdAt: createdAt,
+        clientMessageId: clientMessageId,
+        attachment: attachment,
+        isPending: isPending ?? this.isPending,
+        status: status ?? this.status,
+        localFilePath: localFilePath,
+      );
+
+  Message mergeServerFields(Map<String, dynamic> json) => Message(
+        id: json['id']?.toString() ?? id,
+        conversationId: json['conversation_id']?.toString() ?? conversationId,
+        senderId: json['sender_id']?.toString() ?? senderId,
+        type: (json['message_type'] ?? type).toString(),
+        content: json['content']?.toString() ?? content,
+        createdAt: json['created_at'] != null
+            ? DateTime.parse(json['created_at'].toString()).toLocal()
+            : createdAt,
+        clientMessageId: json['client_message_id']?.toString() ?? clientMessageId,
+        attachment: json['attachment'] is Map<String, dynamic>
+            ? Attachment.fromJson(json['attachment'] as Map<String, dynamic>)
+            : attachment,
+        isPending: false,
+        status: (json['status'] ?? 'sent').toString(),
+        localFilePath: localFilePath,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'conversation_id': conversationId,
+        'sender_id': senderId,
+        'message_type': type,
+        'content': content,
+        'created_at': createdAt.toUtc().toIso8601String(),
+        'client_message_id': clientMessageId,
+        'attachment': attachment?.toJson(),
+        'attachment_url': attachmentUrl,
+        'attachment_type': attachmentType,
+        'mime_type': mimeType,
+        'file_name': fileName,
+        'file_size': fileSize,
+        'thumbnail_url': thumbnailUrl,
+        'status': status,
+      };
 }
 
 class Contact {
@@ -148,7 +251,8 @@ class Contact {
       role: json['role'] as String,
       avatarUrl: json['avatar_url'] as String?,
       department: json['department'] as String?,
-      sharedCourseName: sharedCourse != null ? sharedCourse['name'] as String? : null,
+      sharedCourseName:
+          sharedCourse != null ? sharedCourse['name'] as String? : null,
     );
   }
 }
@@ -203,7 +307,9 @@ class MessageProvider extends ChangeNotifier {
 
   MessageProvider() {
     refresh();
-    initializeWebSocket();
+    if (!Platform.environment.containsKey('FLUTTER_TEST')) {
+      initializeWebSocket();
+    }
   }
 
   @override
@@ -227,7 +333,8 @@ class MessageProvider extends ChangeNotifier {
 
     try {
       final wsUrl = '${AppConstants.wsUrl}?token=$token';
-      _webSocket = await WebSocket.connect(wsUrl).timeout(const Duration(seconds: 10));
+      _webSocket =
+          await WebSocket.connect(wsUrl).timeout(const Duration(seconds: 10));
       _isWebSocketConnected = true;
       _isOffline = false;
       notifyListeners();
@@ -292,18 +399,27 @@ class MessageProvider extends ChangeNotifier {
 
   void _handleWebSocketMessage(String rawJson) {
     try {
+      debugPrint('WebSocket received raw data: $rawJson');
       final eventData = jsonDecode(rawJson) as Map<String, dynamic>;
       final event = eventData['event'] as String?;
 
       if (event == 'message.created') {
         final messageJson = eventData['data'] as Map<String, dynamic>;
+        debugPrint('WebSocket message.created data: $messageJson');
         final message = Message.fromJson(messageJson);
+        debugPrint(
+            'WebSocket parsed message: id=${message.id}, clientMessageId=${message.clientMessageId}, isPending=${message.isPending}');
 
         // Append to active message history if match
-        if (message.conversationId == _activeConversationId) {
+        if (message.conversationId.toLowerCase() ==
+            _activeConversationId?.toLowerCase()) {
           // Prevent duplicates (e.g. if we sent via WS/REST and received the broadcast)
-          final index = _activeMessages.indexWhere(
-              (m) => m.id == message.id || (m.clientMessageId != null && m.clientMessageId == message.clientMessageId));
+          final index = _activeMessages.indexWhere((m) =>
+              m.id.toLowerCase() == message.id.toLowerCase() ||
+              (m.clientMessageId != null &&
+                  m.clientMessageId!.toLowerCase() ==
+                      message.clientMessageId?.toLowerCase()));
+          debugPrint('WebSocket matching message index: $index');
           if (index != -1) {
             _activeMessages[index] = message;
           } else {
@@ -314,16 +430,21 @@ class MessageProvider extends ChangeNotifier {
         }
 
         // Update the conversations summary list
-        final convIndex = _conversations.indexWhere((c) => c.id == message.conversationId);
+        final convIndex = _conversations.indexWhere(
+            (c) => c.id.toLowerCase() == message.conversationId.toLowerCase());
         if (convIndex != -1) {
           final conv = _conversations[convIndex];
-          final isFromMe = message.senderId != conv.otherParticipantId;
-          final updatedUnread = (message.conversationId == _activeConversationId || isFromMe)
+          final isFromMe = message.senderId.toLowerCase() !=
+              conv.otherParticipantId?.toLowerCase();
+          final updatedUnread = (message.conversationId.toLowerCase() ==
+                      _activeConversationId?.toLowerCase() ||
+                  isFromMe)
               ? conv.unreadCount
               : conv.unreadCount + 1;
 
           _conversations[convIndex] = conv.copyWith(
-            lastMessage: message.content ?? (message.attachment != null ? 'Attachment' : ''),
+            lastMessage: message.content ??
+                (message.attachment != null ? 'Attachment' : ''),
             timestamp: message.createdAt,
             unreadCount: updatedUnread,
           );
@@ -334,16 +455,19 @@ class MessageProvider extends ChangeNotifier {
         notifyListeners();
       } else if (event == 'message.read') {
         final convId = eventData['conversation_id'] as String?;
-        final userId = eventData['user_id'] as String?;
         if (convId != null) {
-          final convIndex = _conversations.indexWhere((c) => c.id == convId);
+          final convIndex = _conversations
+              .indexWhere((c) => c.id.toLowerCase() == convId.toLowerCase());
           if (convIndex != -1) {
-            _conversations[convIndex] = _conversations[convIndex].copyWith(unreadCount: 0);
+            _conversations[convIndex] =
+                _conversations[convIndex].copyWith(unreadCount: 0);
             notifyListeners();
           }
         }
       }
-    } catch (_) {}
+    } catch (e, stackTrace) {
+      debugPrint('Error in _handleWebSocketMessage: $e\n$stackTrace');
+    }
   }
 
   // ── Conversation Actions ───────────────────────────────────────────────────
@@ -389,7 +513,6 @@ class MessageProvider extends ChangeNotifier {
     try {
       final res = await MessageService.listConversations();
       final items = res['items'] as List?;
-      final nextCursor = res['next_cursor'] as String?;
 
       if (items != null) {
         _conversations = items.map((json) {
@@ -431,7 +554,8 @@ class MessageProvider extends ChangeNotifier {
   }
 
   Future<void> markAsRead(String id) async {
-    final index = _conversations.indexWhere((c) => c.id == id);
+    final index = _conversations
+        .indexWhere((c) => c.id.toLowerCase() == id.toLowerCase());
     if (index != -1 && _conversations[index].unreadCount > 0) {
       _conversations[index] = _conversations[index].copyWith(unreadCount: 0);
       notifyListeners();
@@ -439,9 +563,10 @@ class MessageProvider extends ChangeNotifier {
 
     try {
       // Find last message to mark read
-      if (_activeConversationId == id && _activeMessages.isNotEmpty) {
+      if (_activeConversationId?.toLowerCase() == id.toLowerCase() &&
+          _activeMessages.isNotEmpty) {
         final lastMsg = _activeMessages.last;
-        
+
         // WS read event is faster & preferred
         if (_webSocket != null && _isWebSocketConnected) {
           final event = {
@@ -468,7 +593,9 @@ class MessageProvider extends ChangeNotifier {
       final res = await MessageService.getContacts(search: search);
       final items = res['items'] as List?;
       if (items != null) {
-        _contacts = items.map((json) => Contact.fromJson(json as Map<String, dynamic>)).toList();
+        _contacts = items
+            .map((json) => Contact.fromJson(json as Map<String, dynamic>))
+            .toList();
       }
     } catch (e) {
       _contactsError = e.toString();
@@ -508,7 +635,9 @@ class MessageProvider extends ChangeNotifier {
       _nextCursor = res['next_cursor'] as String?;
 
       if (items != null) {
-        _activeMessages = items.map((json) => Message.fromJson(json as Map<String, dynamic>)).toList();
+        _activeMessages = items
+            .map((json) => Message.fromJson(json as Map<String, dynamic>))
+            .toList();
       }
       _hasMoreMessages = _nextCursor != null;
 
@@ -523,17 +652,23 @@ class MessageProvider extends ChangeNotifier {
   }
 
   Future<void> loadMoreMessages() async {
-    if (_activeConversationId == null || _isLoadingMessages || !_hasMoreMessages || _nextCursor == null) {
+    if (_activeConversationId == null ||
+        _isLoadingMessages ||
+        !_hasMoreMessages ||
+        _nextCursor == null) {
       return;
     }
 
     try {
-      final res = await MessageService.listMessages(_activeConversationId!, cursor: _nextCursor);
+      final res = await MessageService.listMessages(_activeConversationId!,
+          cursor: _nextCursor);
       final items = res['items'] as List?;
       _nextCursor = res['next_cursor'] as String?;
 
       if (items != null && items.isNotEmpty) {
-        final newMsgs = items.map((json) => Message.fromJson(json as Map<String, dynamic>)).toList();
+        final newMsgs = items
+            .map((json) => Message.fromJson(json as Map<String, dynamic>))
+            .toList();
         _activeMessages.insertAll(0, newMsgs);
       }
       _hasMoreMessages = _nextCursor != null;
@@ -544,46 +679,46 @@ class MessageProvider extends ChangeNotifier {
   Future<void> sendTextMessage(String content, String currentUserId) async {
     if (_activeConversationId == null || content.trim().isEmpty) return;
 
+    final conversationId = _activeConversationId!;
     final clientMessageId = DateTime.now().microsecondsSinceEpoch.toString();
     final tempMsg = Message(
       id: clientMessageId,
-      conversationId: _activeConversationId!,
+      conversationId: conversationId,
       senderId: currentUserId,
       type: 'text',
       content: content,
       createdAt: DateTime.now(),
       clientMessageId: clientMessageId,
       isPending: true,
+      status: 'sending',
     );
 
-    _activeMessages.add(tempMsg);
+    _activeMessages = [..._activeMessages, tempMsg];
     notifyListeners();
 
     try {
-      Map<String, dynamic> res;
-      // Send via WS if connected, else fallback to REST API
-      if (_webSocket != null && _isWebSocketConnected) {
-        final event = {
-          'event': 'send_message',
-          'conversation_id': _activeConversationId!,
-          'content': content,
-          'client_message_id': clientMessageId,
-        };
-        _webSocket!.add(jsonEncode(event));
-        // We will replace the tempMsg when the WS message.created broadcast arrives.
-        return;
-      } else {
-        res = await MessageService.sendMessage(_activeConversationId!, content, clientMessageId);
-      }
-
-      final confirmedMsg = Message.fromJson(res);
-      final index = _activeMessages.indexWhere((m) => m.clientMessageId == clientMessageId);
+      // The REST response is the delivery acknowledgement for the sender.
+      // WebSocket events remain responsible for real-time fan-out, but a lost
+      // event must never leave the optimistic message pending indefinitely.
+      final res = await MessageService.sendMessage(
+        conversationId,
+        content,
+        clientMessageId,
+      );
+      final confirmedMsg = tempMsg.mergeServerFields(res);
+      final index = _activeMessages.indexWhere(
+        (m) =>
+            m.clientMessageId?.toLowerCase() == clientMessageId.toLowerCase(),
+      );
       if (index != -1) {
         _activeMessages[index] = confirmedMsg;
+        _activeMessages = List<Message>.from(_activeMessages);
       }
 
       // Update local conversation summary
-      final convIndex = _conversations.indexWhere((c) => c.id == _activeConversationId);
+      final convIndex = _conversations.indexWhere(
+        (c) => c.id.toLowerCase() == conversationId.toLowerCase(),
+      );
       if (convIndex != -1) {
         _conversations[convIndex] = _conversations[convIndex].copyWith(
           lastMessage: content,
@@ -591,51 +726,70 @@ class MessageProvider extends ChangeNotifier {
         );
       }
       notifyListeners();
-    } catch (_) {
-      // Mark failed
-      final index = _activeMessages.indexWhere((m) => m.clientMessageId == clientMessageId);
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Message send failed: conversationId=$conversationId, '
+        'clientMessageId=$clientMessageId, error=$error\n$stackTrace',
+      );
+      final index = _activeMessages.indexWhere(
+        (m) =>
+            m.isPending &&
+            m.clientMessageId?.toLowerCase() == clientMessageId.toLowerCase(),
+      );
       if (index != -1) {
-        _activeMessages.removeAt(index);
+        _activeMessages[index] =
+            _activeMessages[index].copyWith(isPending: false, status: 'failed');
+        _activeMessages = List<Message>.from(_activeMessages);
         notifyListeners();
       }
     }
   }
 
-  Future<void> sendFileMessage(File file, String currentUserId, {String? content}) async {
+  Future<void> sendFileMessage(File file, String currentUserId,
+      {String? content}) async {
     if (_activeConversationId == null) return;
 
+    final conversationId = _activeConversationId!;
     final clientMessageId = DateTime.now().microsecondsSinceEpoch.toString();
-    final filename = file.path.split(Platform.pathSeparator).last;
     final tempMsg = Message(
       id: clientMessageId,
-      conversationId: _activeConversationId!,
+      conversationId: conversationId,
       senderId: currentUserId,
       type: 'file',
-      content: content ?? filename,
+      content: content,
       createdAt: DateTime.now(),
       clientMessageId: clientMessageId,
       isPending: true,
+      status: 'sending',
+      localFilePath: file.path, // store so UI can show a local preview
     );
 
-    _activeMessages.add(tempMsg);
+    _activeMessages = [..._activeMessages, tempMsg];
     notifyListeners();
 
     try {
       final res = await MessageService.sendMessageUpload(
-        conversationId: _activeConversationId!,
+        conversationId: conversationId,
         file: file,
         content: content,
         clientMessageId: clientMessageId,
       );
 
-      final confirmedMsg = Message.fromJson(res);
-      final index = _activeMessages.indexWhere((m) => m.clientMessageId == clientMessageId);
+      final confirmedMsg = tempMsg.mergeServerFields(res);
+      final index = _activeMessages.indexWhere(
+        (m) =>
+            m.isPending &&
+            m.clientMessageId?.toLowerCase() == clientMessageId.toLowerCase(),
+      );
       if (index != -1) {
         _activeMessages[index] = confirmedMsg;
+        _activeMessages = List<Message>.from(_activeMessages);
       }
 
       // Update local conversation summary
-      final convIndex = _conversations.indexWhere((c) => c.id == _activeConversationId);
+      final convIndex = _conversations.indexWhere(
+        (c) => c.id.toLowerCase() == conversationId.toLowerCase(),
+      );
       if (convIndex != -1) {
         _conversations[convIndex] = _conversations[convIndex].copyWith(
           lastMessage: confirmedMsg.content ?? 'Attachment',
@@ -643,13 +797,58 @@ class MessageProvider extends ChangeNotifier {
         );
       }
       notifyListeners();
-    } catch (_) {
-      final index = _activeMessages.indexWhere((m) => m.clientMessageId == clientMessageId);
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Message upload failed: conversationId=$conversationId, '
+        'clientMessageId=$clientMessageId, error=$error\n$stackTrace',
+      );
+      final index = _activeMessages.indexWhere(
+        (m) =>
+            m.isPending &&
+            m.clientMessageId?.toLowerCase() == clientMessageId.toLowerCase(),
+      );
       if (index != -1) {
-        _activeMessages.removeAt(index);
+        _activeMessages[index] =
+            _activeMessages[index].copyWith(isPending: false, status: 'failed');
+        _activeMessages = List<Message>.from(_activeMessages);
         notifyListeners();
       }
     }
+  }
+
+  Future<void> retryMessage(Message message) async {
+    final index = _activeMessages.indexWhere((item) => item.id == message.id);
+    if (index == -1 || message.status != 'failed') return;
+    _activeMessages[index] =
+        message.copyWith(isPending: true, status: 'sending');
+    _activeMessages = List<Message>.from(_activeMessages);
+    notifyListeners();
+
+    try {
+      final response = message.localFilePath != null
+          ? await MessageService.sendMessageUpload(
+              conversationId: message.conversationId,
+              file: File(message.localFilePath!),
+              content: message.content,
+              clientMessageId: message.clientMessageId!,
+            )
+          : await MessageService.sendMessage(
+              message.conversationId,
+              message.content ?? '',
+              message.clientMessageId!,
+            );
+      _activeMessages[index] = message.mergeServerFields(response);
+    } catch (error, stackTrace) {
+      debugPrint(
+        'Message retry failed: conversationId=${message.conversationId}, '
+        'clientMessageId=${message.clientMessageId}, '
+        'error=$error\n$stackTrace',
+      );
+      _activeMessages[index] =
+          message.copyWith(isPending: false, status: 'failed');
+    }
+    _activeMessages = List<Message>.from(_activeMessages);
+    notifyListeners();
   }
 
   // ── Attachment Downloads ───────────────────────────────────────────────────

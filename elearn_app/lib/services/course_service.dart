@@ -14,7 +14,6 @@ import '../models/lesson.dart';
 
 
 class CourseService {
-  static const _headers = {'Content-Type': 'application/json'};
 
   // ── Response handler ────────────────────────────────────────────────────────
 

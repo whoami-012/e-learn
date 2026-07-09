@@ -7,7 +7,6 @@ import '../../features/live_class/presentation/controllers/live_class_controller
 import '../../features/live_class/presentation/screens/live_class_detail_screen.dart';
 import '../../features/live_class/presentation/screens/live_class_list_screen.dart';
 import '../../theme/app_theme.dart';
-import '../../providers/theme_provider.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
 import '../courses/course_list_screen.dart';
@@ -46,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!userProvider.hasUser) {
         userProvider.loadUser();
       }
-      
+
       // Fetch initial data
       context.read<CourseProvider>().fetchCourses().then((_) {
         if (!mounted) return;
@@ -55,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
           context.read<ExamProvider>().fetchExams(courses.first.id);
         }
       });
-      
+
       context.read<LiveClassController>().load();
     });
   }
@@ -80,7 +79,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _formatTime(DateTime dateTime) {
-    final hour = dateTime.hour == 0 ? 12 : (dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour);
+    final hour = dateTime.hour == 0
+        ? 12
+        : (dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour);
     final period = dateTime.hour >= 12 ? 'PM' : 'AM';
     final minute = dateTime.minute.toString().padLeft(2, '0');
     return '$hour:$minute $period';
@@ -88,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onBottomNavTapped(int index) {
     if (index == 0) return;
-    
+
     if (index == 1) {
       Navigator.push(
         context,
@@ -169,7 +170,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F1117) : const Color(0xFFF7F8FC),
+      backgroundColor:
+          isDark ? const Color(0xFF0F1117) : const Color(0xFFF7F8FC),
       bottomNavigationBar: SafeArea(
         child: AppBottomNavigation(
           currentIndex: _currentIndex,
@@ -179,7 +181,9 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         onRefresh: () async {
           await context.read<CourseProvider>().fetchCourses();
+          if (!context.mounted) return;
           await context.read<LiveClassController>().load();
+          if (!context.mounted) return;
           final courses = context.read<CourseProvider>().courses;
           if (courses.isNotEmpty) {
             await context.read<ExamProvider>().fetchExams(courses.first.id);
@@ -195,14 +199,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   slivers: [
                     SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 16.0),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
                           // ── Compact Error Banner ──
-                          if (courseState.error != null || liveClassState.error != null)
+                          if (courseState.error != null ||
+                              liveClassState.error != null)
                             Container(
                               margin: const EdgeInsets.only(bottom: 16.0),
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 10.0),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFECEC),
                                 borderRadius: BorderRadius.circular(12.0),
@@ -210,20 +217,32 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.error_outline_rounded, color: Colors.red, size: 20),
+                                  const Icon(Icons.error_outline_rounded,
+                                      color: Colors.red, size: 20),
                                   const SizedBox(width: 8.0),
                                   Expanded(
                                     child: Text(
-                                      courseState.error ?? liveClassState.error ?? 'Connection error',
-                                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                                      courseState.error ??
+                                          liveClassState.error ??
+                                          'Connection error',
+                                      style: const TextStyle(
+                                          color: Colors.red, fontSize: 12),
                                     ),
                                   ),
                                   TextButton(
                                     onPressed: () {
-                                      context.read<CourseProvider>().fetchCourses();
-                                      context.read<LiveClassController>().load();
+                                      context
+                                          .read<CourseProvider>()
+                                          .fetchCourses();
+                                      context
+                                          .read<LiveClassController>()
+                                          .load();
                                     },
-                                    child: const Text('Retry', style: TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.bold)),
+                                    child: const Text('Retry',
+                                        style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.bold)),
                                   ),
                                 ],
                               ),
@@ -235,11 +254,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             initials: _getInitials(user.name),
                             onSearchTap: () => Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const CourseListScreen()),
+                              MaterialPageRoute(
+                                  builder: (_) => const CourseListScreen()),
                             ),
-                            onNotificationsTap: () {
-                              context.read<ThemeProvider>().toggleTheme();
-                            },
+                            onNotificationsTap: () =>
+                                _showNotificationsSheet(context),
                             onAvatarTap: _logout,
                           ),
                           const SizedBox(height: 24.0),
@@ -277,7 +296,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 110.0), // Padding so content is not blocked by floating bottom navigation
+                          const SizedBox(
+                              height:
+                                  110.0), // Padding so content is not blocked by floating bottom navigation
                         ]),
                       ),
                     ),
@@ -310,7 +331,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Column(
           children: [
-            const Icon(Icons.school_outlined, size: 52, color: AppColors.primary),
+            const Icon(Icons.school_outlined,
+                size: 52, color: AppColors.primary),
             const SizedBox(height: 16.0),
             Text(
               'Ready for your next lecture?',
@@ -326,7 +348,8 @@ class _HomeScreenState extends State<HomeScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
-                color: isDark ? const Color(0xFFADB4C4) : AppColors.textSecondary,
+                color:
+                    isDark ? const Color(0xFFADB4C4) : AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 16.0),
@@ -373,7 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTodayClasses(LiveClassController controller) {
     final todayClasses = controller.classes;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -409,9 +432,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
               final card1 = LiveClassCard(
                 title: class1.title,
-                time: '${_formatTime(class1.scheduledStartTime)} – ${_formatTime(class1.scheduledEndTime)}',
+                time:
+                    '${_formatTime(class1.scheduledStartTime)} – ${_formatTime(class1.scheduledEndTime)}',
                 instructorName: class1.facultyName ?? 'Faculty',
-                imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200',
+                imageUrl:
+                    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200',
                 backgroundColor: AppColors.yellowSoft,
                 isLive: class1.status == 'live',
                 onTap: () => Navigator.push(
@@ -425,15 +450,18 @@ class _HomeScreenState extends State<HomeScreen> {
               final card2 = class2 != null
                   ? LiveClassCard(
                       title: class2.title,
-                      time: '${_formatTime(class2.scheduledStartTime)} – ${_formatTime(class2.scheduledEndTime)}',
+                      time:
+                          '${_formatTime(class2.scheduledStartTime)} – ${_formatTime(class2.scheduledEndTime)}',
                       instructorName: class2.facultyName ?? 'Faculty',
-                      imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
+                      imageUrl:
+                          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200',
                       backgroundColor: AppColors.lavenderSoft,
                       isLive: class2.status == 'live',
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => LiveClassDetailScreen(liveClass: class2),
+                          builder: (_) =>
+                              LiveClassDetailScreen(liveClass: class2),
                         ),
                       ),
                     )
@@ -441,7 +469,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'Physics Revision',
                       time: '02:00 PM – 03:00 PM',
                       instructorName: 'Sarah Jenkins',
-                      imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=200',
+                      imageUrl:
+                          'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=200',
                       backgroundColor: AppColors.blueSoft,
                       onTap: () {},
                     );
@@ -513,6 +542,185 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _showNotificationsSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.6,
+          decoration: BoxDecoration(
+            color: ProfileColors.surface(isDark),
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(24.0)),
+          ),
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 24.0),
+                  decoration: BoxDecoration(
+                    color: ProfileColors.border(isDark),
+                    borderRadius: BorderRadius.circular(2.0),
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Notifications',
+                    style: TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Plus Jakarta Sans',
+                      color: ProfileColors.deepNavy(isDark),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('All notifications marked as read'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'Mark all as read',
+                      style: TextStyle(
+                        color: ProfileColors.primaryPurple(isDark),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14.0,
+                        fontFamily: 'Plus Jakarta Sans',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16.0),
+              Expanded(
+                child: ListView(
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    _buildNotificationItem(
+                      title: 'Welcome to E-Learn!',
+                      body:
+                          'Start your learning journey today by exploring our latest courses.',
+                      time: 'Just now',
+                      icon: Icons.celebration_rounded,
+                      iconBgColor: ProfileColors.softLavender(isDark),
+                      iconColor: ProfileColors.primaryPurple(isDark),
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 12.0),
+                    _buildNotificationItem(
+                      title: 'New Course Available',
+                      body:
+                          'We have just added "Advanced Flutter Concepts". Check it out!',
+                      time: '2 hours ago',
+                      icon: Icons.menu_book_rounded,
+                      iconBgColor: const Color(0xFFFFF4EC),
+                      iconColor: Colors.orange,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 12.0),
+                    _buildNotificationItem(
+                      title: 'Live Class Reminder',
+                      body:
+                          'Your live session "Introduction to FastAPI Backend" starts in 30 minutes.',
+                      time: '1 day ago',
+                      icon: Icons.videocam_rounded,
+                      iconBgColor: const Color(0xFFE8F5E9),
+                      iconColor: Colors.green,
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNotificationItem({
+    required String title,
+    required String body,
+    required String time,
+    required IconData icon,
+    required Color iconBgColor,
+    required Color iconColor,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: ProfileColors.surface(isDark),
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: ProfileColors.border(isDark)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10.0),
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 20.0),
+          ),
+          const SizedBox(width: 14.0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.0,
+                    fontFamily: 'Plus Jakarta Sans',
+                    color: ProfileColors.deepNavy(isDark),
+                  ),
+                ),
+                const SizedBox(height: 4.0),
+                Text(
+                  body,
+                  style: TextStyle(
+                    fontSize: 12.0,
+                    fontFamily: 'Plus Jakarta Sans',
+                    color: ProfileColors.mutedText(isDark),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 6.0),
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 10.0,
+                    fontFamily: 'Plus Jakarta Sans',
+                    color:
+                        ProfileColors.mutedText(isDark).withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildContinueLearning(CourseProvider provider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -550,7 +758,8 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => CourseDetailScreen(courseId: provider.courses.first.id),
+                  builder: (_) =>
+                      CourseDetailScreen(courseId: provider.courses.first.id),
                 ),
               );
             },

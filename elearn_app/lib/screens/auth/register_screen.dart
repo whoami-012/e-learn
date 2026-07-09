@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/exceptions/auth_exception.dart';
 import '../../services/auth_service.dart';
 import 'login_screen.dart';
 import '../../theme/app_theme.dart';
+import '../../providers/user_provider.dart';
+import '../home/home_screen.dart';
+import '../../features/dashboard/presentation/screens/teacher_faculty_dashboard_screen.dart';
+import '../admin/admin_dashboard_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,12 +19,13 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final _nameController     = TextEditingController();
-  final _emailController    = TextEditingController();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  bool _isSocialLoading = false;
 
   @override
   void dispose() {
@@ -40,7 +46,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) return 'Email is required';
     final emailRegex = RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$');
-    if (!emailRegex.hasMatch(value.trim())) return 'Enter a valid email address';
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Enter a valid email address';
+    }
     return null;
   }
 
@@ -63,8 +71,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       await AuthService.register(
-        name:     _nameController.text.trim(),
-        email:    _emailController.text.trim(),
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
@@ -75,7 +83,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           content: const Text('Account created! Please log in.'),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.small)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.small)),
           margin: const EdgeInsets.all(AppSpacing.md),
         ),
       );
@@ -91,12 +100,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
           content: Text(e.message),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.small)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.small)),
           margin: const EdgeInsets.all(AppSpacing.md),
         ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _onSocialAuth({required bool apple}) async {
+    if (_isLoading || _isSocialLoading) return;
+    setState(() => _isSocialLoading = true);
+    try {
+      final response = apple
+          ? await AuthService.signInWithApple()
+          : await AuthService.signInWithGoogle();
+      if (response == null || !mounted) return;
+      context.read<UserProvider>().setUser(response.user);
+      final role = response.user.role;
+      final target = role == 'faculty' || role == 'teacher'
+          ? const TeacherFacultyDashboardScreen()
+          : (role == 'admin'
+              ? const AdminDashboardScreen()
+              : const HomeScreen());
+      Navigator.of(context)
+          .pushReplacement(MaterialPageRoute(builder: (_) => target));
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(error.message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ));
+    } finally {
+      if (mounted) setState(() => _isSocialLoading = false);
     }
   }
 
@@ -113,7 +152,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Center(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg, vertical: AppSpacing.lg),
             child: Form(
               key: _formKey,
               child: Column(
@@ -179,7 +219,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: GestureDetector(
                                 onTap: () {
                                   Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                    MaterialPageRoute(
+                                        builder: (_) => const LoginScreen()),
                                   );
                                 },
                                 child: Column(
@@ -249,7 +290,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: _validateName,
                           decoration: const InputDecoration(
                             hintText: 'John Doe',
-                            prefixIcon: Icon(Icons.person_outline_rounded, size: 20, color: AppColors.textSecondary),
+                            prefixIcon: Icon(Icons.person_outline_rounded,
+                                size: 20, color: AppColors.textSecondary),
                           ),
                         ),
 
@@ -272,7 +314,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: _validateEmail,
                           decoration: const InputDecoration(
                             hintText: 'you@example.com',
-                            prefixIcon: Icon(Icons.email_outlined, size: 20, color: AppColors.textSecondary),
+                            prefixIcon: Icon(Icons.email_outlined,
+                                size: 20, color: AppColors.textSecondary),
                           ),
                         ),
 
@@ -295,7 +338,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: _validatePassword,
                           decoration: InputDecoration(
                             hintText: '••••••••',
-                            prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20, color: AppColors.textSecondary),
+                            prefixIcon: const Icon(Icons.lock_outline_rounded,
+                                size: 20, color: AppColors.textSecondary),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _isPasswordVisible
@@ -332,7 +376,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     height: 22,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
                                     ),
                                   )
                                 : const Text('Sign Up'),
@@ -349,7 +394,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     children: [
                       const Expanded(child: Divider()),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md),
                         child: Text(
                           'Or sign up with',
                           style: textTheme.bodySmall?.copyWith(
@@ -370,13 +416,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       _SocialAuthButton(
                         icon: Icons.g_mobiledata_rounded,
                         label: 'Google',
-                        onTap: () {},
+                        onTap: () => _onSocialAuth(apple: false),
                       ),
                       const SizedBox(width: AppSpacing.md),
                       _SocialAuthButton(
                         icon: Icons.apple_rounded,
                         label: 'Apple',
-                        onTap: () {},
+                        onTap: () => _onSocialAuth(apple: true),
                       ),
                     ],
                   ),
@@ -407,7 +453,8 @@ class _SocialAuthButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.medium),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm + 4),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg, vertical: AppSpacing.sm + 4),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.medium),

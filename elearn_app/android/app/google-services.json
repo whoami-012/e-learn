@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "949329981376",
+    "project_id": "elearn-39abe",
+    "storage_bucket": "elearn-39abe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:949329981376:android:9a1e4c70672b9839e5e225",
+        "android_client_info": {
+          "package_name": "com.shopstack.elearn"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "949329981376-dp9c8q2q83i1mlsot11be1av9r14ng4b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.shopstack.elearn",
+            "certificate_hash": "58b0c7587ad3d493d726c06e498a4c4155eecf3a"
+          }
+        },
+        {
+          "client_id": "949329981376-3h45u3mtb8n1j4bpdkn6qdtempj3hkrc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqGgYQAFO5n-MD3ufOdkqNV0NLYr9l89E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "949329981376-3h45u3mtb8n1j4bpdkn6qdtempj3hkrc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

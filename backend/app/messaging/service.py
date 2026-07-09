@@ -82,8 +82,10 @@ class MessagingService:
             await self.repo.add_message(message)
             conversation.last_message = message
             await self.db.commit()
-            await self.db.refresh(message)
-            return message
+            created = await self.repo.get_message(message.id)
+            if created is None:
+                raise RuntimeError("Committed message could not be reloaded.")
+            return created
         except IntegrityError:
             await self.db.rollback()
             existing = await self.repo.get_idempotent_message(current_user.id, client_message_id)
@@ -127,6 +129,13 @@ class MessagingService:
             original_filename=upload.original_filename,
             storage_key=upload.storage_key,
             mime_type=upload.mime_type,
+            attachment_type=(
+                "image"
+                if upload.mime_type.startswith("image/")
+                else "video"
+                if upload.mime_type.startswith("video/")
+                else "file"
+            ),
             file_extension=upload.extension,
             file_size=upload.file_size,
             checksum=upload.checksum,

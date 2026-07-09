@@ -80,7 +80,8 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                       onMessageTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const MessageScreen()),
+                          MaterialPageRoute(
+                              builder: (_) => const MessageScreen()),
                         );
                       },
                     ),
@@ -122,7 +123,8 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                         'Uploads',
                         'Scheduled'
                       ],
-                      onCategorySelected: (category) {},
+                      onCategorySelected: (category) =>
+                          provider.filterByCategory(category),
                     ),
 
                     const SizedBox(height: AppSpacing.sm),
@@ -137,7 +139,8 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                                   valueColor: AlwaysStoppedAnimation<Color>(
                                       AppColors.primary)))
                           : provider.courses.isEmpty
-                              ? _buildEmptyState(provider, user?.id)
+                              ? _buildEmptyState(
+                                  provider, user?.id, provider.activeCategory)
                               : Column(
                                   children: provider.courses
                                       .asMap()
@@ -234,7 +237,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                 context,
                 MaterialPageRoute(builder: (_) => const CreateCourseScreen()),
               ).then((_) {
-                if (mounted) {
+                if (context.mounted) {
                   final user = context.read<UserProvider>().user;
                   context
                       .read<TeacherDashboardProvider>()
@@ -304,7 +307,19 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
     }).toList();
   }
 
-  Widget _buildEmptyState(TeacherDashboardProvider provider, String? userId) {
+  Widget _buildEmptyState(
+      TeacherDashboardProvider provider, String? userId, String category) {
+    // Context-aware message depending on which tab is active
+    final emptyMessages = {
+      'Courses': 'No paid courses yet.\nCreate a course to get started.',
+      'Uploads': 'No free uploads yet.\nMark a course as free to see it here.',
+      'Scheduled':
+          'No courses added in the last 30 days.\nRecently created courses appear here.',
+      'All': 'No courses yet.\nCreate your first course!',
+    };
+    final message =
+        provider.error ?? emptyMessages[category] ?? 'No courses yet';
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -314,14 +329,16 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
               size: 52, color: AppColors.textSecondary),
           const SizedBox(height: AppSpacing.md),
           Text(
-            provider.error ?? 'No courses yet',
-            style: const TextStyle(color: AppColors.textSecondary),
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.textSecondary, height: 1.5),
           ),
           const SizedBox(height: AppSpacing.sm),
-          TextButton(
-            onPressed: () => provider.fetchCourses(userId),
-            child: const Text('Refresh'),
-          ),
+          if (provider.error != null)
+            TextButton(
+              onPressed: () => provider.fetchCourses(userId),
+              child: const Text('Refresh'),
+            ),
         ],
       ),
     );

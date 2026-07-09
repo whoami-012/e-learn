@@ -98,7 +98,7 @@ class WeeklyGoalCard extends StatelessWidget {
               height: 5.0,
               child: LinearProgressIndicator(
                 value: progress,
-                backgroundColor: isDark ? const Color(0xFF065F46) : Colors.white.withOpacity(0.6),
+                backgroundColor: isDark ? const Color(0xFF065F46) : Colors.white.withValues(alpha: 0.6),
                 valueColor: AlwaysStoppedAnimation<Color>(
                   isDark ? const Color(0xFF34D399) : AppColors.success,
                 ),

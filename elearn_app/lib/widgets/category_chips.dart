@@ -61,14 +61,14 @@ class _CategoryChipsState extends State<CategoryChips> {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: const Color(0xFFC7D2FE).withOpacity(0.5),
+                            color: const Color(0xFFC7D2FE).withValues(alpha: 0.5),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           )
                         ]
                       : [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 5,
                             offset: const Offset(0, 2),
                           )

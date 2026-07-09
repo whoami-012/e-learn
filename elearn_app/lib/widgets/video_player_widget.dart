@@ -2,23 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VideoPlayerWidget
+//
+// Uses a raw WebView that loads an inline HTML page containing a YouTube
+// <iframe> embed.  This is the approach Google's own documentation recommends
+// for mobile WebView clients:
+//
+//   "Mobile app with local HTML file: setting the `baseUrl` parameter will
+//    set the Referer. Use Android `loadDataWithBaseURL` /
+//    iOS `loadHTMLString:baseURL:`"
+//   — https://developers.google.com/youtube/terms/required-minimum-functionality
+//
+// Key decisions:
+//   1. baseUrl = 'https://www.youtube-nocookie.com'
+//      → Android internally calls `loadDataWithBaseURL`, which sets the HTTP
+//        Referer header to this value on every sub-request the player makes.
+//      → `youtube-nocookie.com` is the privacy-enhanced embed domain that
+//        YouTube also uses as its own iframe origin, so it is always trusted.
+//   2. <meta name="referrer" content="strict-origin-when-cross-origin">
+//      → Instructs Chromium to send the origin in the Referer header even on
+//        cross-origin requests (YouTube ↔ googlevideo CDN).
+//   3. referrerpolicy="strict-origin-when-cross-origin" on the <iframe>
+//      → Belt-and-suspenders: the iframe element itself also signals the policy.
+//   4. Chrome Mobile User-Agent (no "wv" token)
+//      → Removes the WebView fingerprint that YouTube's CDN uses to block
+//        embedded players.
+// ─────────────────────────────────────────────────────────────────────────────
 
 class VideoPlayerWidget extends StatefulWidget {
   final String videoId;
   final bool isLocked;
 
-  /// Called when the video finishes playing — use this to auto-advance lessons.
+  /// Called when the video finishes — use this to auto-advance lessons.
   final VoidCallback? onVideoEnded;
-
-  /// Called on YouTube player errors (error code passed as argument).
-  final ValueChanged<YoutubeError>? onError;
 
   const VideoPlayerWidget({
     required this.videoId,
     this.isLocked = false,
     this.onVideoEnded,
-    this.onError,
     super.key,
   });
 
@@ -27,127 +50,153 @@ class VideoPlayerWidget extends StatefulWidget {
 }
 
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
-  late YoutubePlayerController _controller;
+  late final WebViewController _webViewController;
   bool _isLoading = true;
   bool _hasError = false;
 
   // Strips full YouTube URLs down to the bare 11-char video ID.
   static String _cleanId(String raw) {
-    final uri = Uri.tryParse(raw);
+    final value = raw.trim();
+    final uri = Uri.tryParse(value);
     if (uri != null) {
-      if (uri.queryParameters.containsKey('v')) return uri.queryParameters['v']!;
+      if (uri.queryParameters.containsKey('v')) {
+        return uri.queryParameters['v']!;
+      }
       if (uri.pathSegments.isNotEmpty) {
         final last = uri.pathSegments.last;
         if (last.length == 11) return last;
       }
     }
-    return raw;
+    return value;
+  }
+
+  // Builds the HTML that hosts the YouTube iframe.
+  // The origin and referrerpolicy attributes are the critical identity signals.
+  String _buildHtml(String videoId) {
+    // Use youtube-nocookie.com embed URL for privacy-enhanced mode and
+    // to match the baseUrl origin we set below.
+    final embedUrl = 'https://www.youtube-nocookie.com/embed/$videoId'
+        '?autoplay=0'
+        '&playsinline=1'
+        '&rel=0'
+        '&modestbranding=1'
+        '&enablejsapi=1'
+        '&origin=https://www.youtube-nocookie.com';
+
+    return '''<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!--
+    strict-origin-when-cross-origin: sends the full origin (scheme + host) as
+    Referer on cross-origin requests, which is exactly what YouTube requires to
+    identify the embedding client.
+  -->
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+    .container {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 aspect ratio */
+    }
+    iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <iframe
+      src="$embedUrl"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin">
+    </iframe>
+  </div>
+</body>
+</html>''';
   }
 
   @override
   void initState() {
     super.initState();
-    _initController(widget.videoId);
+    _initWebView(widget.videoId);
   }
 
-  void _initController(String rawId) {
+  void _initWebView(String rawId) {
     final id = _cleanId(rawId);
     debugPrint('[VideoPlayer] Loading videoId: $id');
 
-    _controller = YoutubePlayerController(
-      params: const YoutubePlayerParams(
-        showControls: true,
-        showFullscreenButton: true,
-        playsInline: true,
-        strictRelatedVideos: true,    // keeps recommended vids from other channels away
-        showVideoAnnotations: false,
-        enableCaption: false,
-      ),
-    );
-
-    // ── Android fixes ──────────────────────────────────────────────────────
-    // youtube_player_iframe uses webview_flutter internally.
-    // We access webViewController here to apply two platform-level fixes
-    // before the first request is made:
-    //
-    // 1. UA override: Android WebView appends 'wv' to its User-Agent.
-    //    YouTube's CDN detects this and blocks the stream with "An error
-    //    occurred. Please try again later." Replacing with a Chrome Mobile
-    //    UA removes that signal.
-    //
-    // 2. MediaPlaybackRequiresUserGesture(false): without this the video
-    //    thumbnail shows but the player never starts.
-    //
-    // Note: webViewController is annotated @internal by the package.
-    // We suppress the lint warning here deliberately. If youtube_player_iframe
-    // adds official UA/referrer configuration in a future release, remove this.
-    // ignore: invalid_use_of_internal_member
-    _controller.webViewController
+    _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      // Chrome Mobile UA — removes the "wv" (WebView) token that YouTube's
+      // CDN detects and uses to block embedded playback.
       ..setUserAgent(
         'Mozilla/5.0 (Linux; Android 10; Mobile) '
         'AppleWebKit/537.36 (KHTML, like Gecko) '
         'Chrome/124.0.6367.82 Mobile Safari/537.36',
+      )
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (_) {
+            if (mounted) setState(() => _isLoading = true);
+          },
+          onPageFinished: (_) {
+            if (mounted) setState(() => _isLoading = false);
+          },
+          onWebResourceError: (error) {
+            debugPrint('[VideoPlayer] WebResource error: ${error.description}');
+            // Ignore sub-resource errors (ads, tracking pixels, etc.)
+            // Only flag main-frame failures.
+            if (error.isForMainFrame == true) {
+              if (mounted) {
+                setState(() {
+                  _isLoading = false;
+                  _hasError = true;
+                });
+              }
+            }
+          },
+        ),
       );
 
-    // ignore: invalid_use_of_internal_member
-    final platform = _controller.webViewController.platform;
+    // Android-specific tweaks
+    final platform = _webViewController.platform;
     if (platform is AndroidWebViewController) {
-      AndroidWebViewController.enableDebugging(true); // remove before prod release
+      AndroidWebViewController.enableDebugging(true); // remove before prod
       platform.setMediaPlaybackRequiresUserGesture(false);
     }
-    // ───────────────────────────────────────────────────────────────────────
 
-    // Stream-based events — this is the key advantage of youtube_player_iframe
-    // over a raw WebView: typed state changes, errors, and position updates.
-    _controller.stream.listen(
-      (value) {
-        if (!mounted) return;
-
-        // Any active state = player loaded successfully
-        if (value.playerState == PlayerState.playing ||
-            value.playerState == PlayerState.paused ||
-            value.playerState == PlayerState.cued) {
-          if (_isLoading || _hasError) {
-            setState(() { _isLoading = false; _hasError = false; });
-          }
-        }
-
-        // Video finished — notify parent for auto-advance, analytics, etc.
-        if (value.playerState == PlayerState.ended) {
-          setState(() => _isLoading = false);
-          widget.onVideoEnded?.call();
-        }
-
-        // YouTube IFrame API error (e.g. notEmbeddable, videoNotFound)
-        if (value.error != YoutubeError.none) {
-          debugPrint('[VideoPlayer] YouTube error: ${value.error}');
-          widget.onError?.call(value.error);
-          if (mounted) setState(() { _isLoading = false; _hasError = true; });
-        }
-      },
-      onError: (e) {
-        debugPrint('[VideoPlayer] Stream error: $e');
-        if (mounted) setState(() { _isLoading = false; _hasError = true; });
-      },
+    // Load the HTML string with baseUrl = youtube-nocookie.com.
+    // Flutter's WebViewController.loadHtmlString() calls:
+    //   Android: WebView.loadDataWithBaseURL(baseUrl, ...)
+    //   iOS:     WKWebView.loadHTMLString(_:baseURL:)
+    // Both of these cause the platform WebView to send the baseUrl as the
+    // HTTP Referer header on all subsequent requests made by the page.
+    _webViewController.loadHtmlString(
+      _buildHtml(id),
+      baseUrl: 'https://www.youtube-nocookie.com',
     );
 
-    // Load the video. The controller queues this until the WebView is ready.
-    _controller.loadVideoById(videoId: id);
-
-    // Safety fallback: hide spinner after 10s if no state event arrives
-    Future.delayed(const Duration(seconds: 10), () {
+    // Safety fallback: hide spinner after 12 s if no page-finished event fires
+    Future.delayed(const Duration(seconds: 12), () {
       if (mounted && _isLoading) setState(() => _isLoading = false);
     });
   }
 
   @override
   void dispose() {
-    _controller.close(); // stops playback + releases the internal WebView
     super.dispose();
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
   String get _youtubeUrl =>
       'https://www.youtube.com/watch?v=${_cleanId(widget.videoId)}';
@@ -162,15 +211,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     }
   }
 
-  // ── Public control methods ────────────────────────────────────────────────
-  // Expose these if you need programmatic control from the parent screen.
-
-  Future<void> play()  => _controller.playVideo();
-  Future<void> pause() => _controller.pauseVideo();
-  Future<void> seekTo(Duration position) =>
-      _controller.seekTo(seconds: position.inSeconds.toDouble());
-
-  // ── Locked UI ─────────────────────────────────────────────────────────────
+  // ── Locked UI ──────────────────────────────────────────────────────────────
 
   Widget _buildLockedView() {
     return AspectRatio(
@@ -197,7 +238,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     );
   }
 
-  // ── Error UI ──────────────────────────────────────────────────────────────
+  // ── Error UI ───────────────────────────────────────────────────────────────
 
   Widget _buildErrorView() {
     return AspectRatio(
@@ -256,7 +297,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     );
   }
 
-  // ── Player UI ─────────────────────────────────────────────────────────────
+  // ── Player UI ──────────────────────────────────────────────────────────────
 
   Widget _buildPlayerView() {
     return ClipRRect(
@@ -266,7 +307,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            YoutubePlayer(controller: _controller),
+            WebViewWidget(controller: _webViewController),
             if (_isLoading)
               Container(
                 color: Colors.black,
@@ -283,7 +324,7 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
     );
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
+  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {

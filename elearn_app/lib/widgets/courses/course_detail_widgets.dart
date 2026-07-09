@@ -53,7 +53,7 @@ class CourseHeroCard extends StatelessWidget {
 
           // Dark Overlay for play button readability
           Container(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
           ),
 
           // Play Button
@@ -261,7 +261,7 @@ class CourseMetadataCard extends StatelessWidget {
                 Icons.calendar_month_rounded,
                 'Created At',
                 createdStr,
-                isDark ? colors.primary.withOpacity(0.15) : AppColors.blueSoft,
+                isDark ? colors.primary.withValues(alpha: 0.15) : AppColors.blueSoft,
                 isDark ? colors.primary : AppColors.blue,
               ),
               _buildMetadataItem(
@@ -269,7 +269,7 @@ class CourseMetadataCard extends StatelessWidget {
                 Icons.update_rounded,
                 'Updated At',
                 updatedStr,
-                isDark ? colors.primary.withOpacity(0.15) : AppColors.lavenderSoft,
+                isDark ? colors.primary.withValues(alpha: 0.15) : AppColors.lavenderSoft,
                 isDark ? colors.primary : AppColors.primary,
               ),
               _buildMetadataItem(
@@ -278,8 +278,8 @@ class CourseMetadataCard extends StatelessWidget {
                 'Access Type',
                 course.isFree ? 'Free Access' : 'Premium',
                 course.isFree
-                    ? (isDark ? colors.error.withOpacity(0.15) : AppColors.greenSoft) // Using success/error theme-aware values
-                    : (isDark ? colors.secondary.withOpacity(0.15) : AppColors.orangeSoft),
+                    ? (isDark ? colors.error.withValues(alpha: 0.15) : AppColors.greenSoft) // Using success/error theme-aware values
+                    : (isDark ? colors.secondary.withValues(alpha: 0.15) : AppColors.orangeSoft),
                 course.isFree
                     ? (isDark ? colors.primary : AppColors.success)
                     : (isDark ? colors.secondary : AppColors.orange),
@@ -289,7 +289,7 @@ class CourseMetadataCard extends StatelessWidget {
                 Icons.verified_user_rounded,
                 'Level/Class',
                 'All Levels',
-                isDark ? colors.secondary.withOpacity(0.15) : AppColors.yellowSoft,
+                isDark ? colors.secondary.withValues(alpha: 0.15) : AppColors.yellowSoft,
                 isDark ? colors.secondary : AppColors.orange,
               ),
             ],
@@ -376,7 +376,7 @@ class CourseProgressCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colors.primaryContainer.withOpacity(0.3),
+        color: colors.primaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(AppRadius.large),
         border: Border.all(color: colors.primaryContainer, width: 1),
       ),
@@ -485,7 +485,7 @@ class LessonTile extends StatelessWidget {
         baseColor = AppColors.yellowSoft;
         break;
     }
-    return isDark ? baseColor.withOpacity(0.15) : baseColor;
+    return isDark ? baseColor.withValues(alpha: 0.15) : baseColor;
   }
 
   @override
@@ -498,7 +498,7 @@ class LessonTile extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 6),
       decoration: BoxDecoration(
-        color: isActive ? colors.primaryContainer.withOpacity(0.2) : colors.surface,
+        color: isActive ? colors.primaryContainer.withValues(alpha: 0.2) : colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.medium),
         border: Border.all(
           color: isActive ? colors.primary : colors.outlineVariant,
@@ -592,7 +592,7 @@ class LessonTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: AppColors.live.withOpacity(0.1),
+              color: AppColors.live.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
             ),
             child: const Text(

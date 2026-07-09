@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
 
 /// Redesigned premium screen header with back-action icon and notifications action.
 class CourseScreenHeader extends StatelessWidget {
@@ -34,13 +33,16 @@ class CourseScreenHeader extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.2 : 0.045),
+                      color:
+                          Colors.black.withValues(alpha: isDark ? 0.2 : 0.045),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
                   ],
                   border: Border.all(
-                    color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withOpacity(0.6),
+                    color: isDark
+                        ? const Color(0xFF303542)
+                        : const Color(0xFFE9EBF2).withValues(alpha: 0.6),
                     width: 1,
                   ),
                 ),
@@ -78,13 +80,15 @@ class CourseScreenHeader extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.045),
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.045),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
                 ],
                 border: Border.all(
-                  color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withOpacity(0.6),
+                  color: isDark
+                      ? const Color(0xFF303542)
+                      : const Color(0xFFE9EBF2).withValues(alpha: 0.6),
                   width: 1,
                 ),
               ),
@@ -157,14 +161,18 @@ class _CourseSearchFieldState extends State<CourseSearchField> {
           color: isDark ? const Color(0xFF181B23) : Colors.white,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: _isFocused ? theme.colorScheme.primary : (isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withOpacity(0.5)),
+            color: _isFocused
+                ? theme.colorScheme.primary
+                : (isDark
+                    ? const Color(0xFF303542)
+                    : const Color(0xFFE9EBF2).withValues(alpha: 0.5)),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
               color: _isFocused
-                  ? theme.colorScheme.primary.withOpacity(0.06)
-                  : Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+                  ? theme.colorScheme.primary.withValues(alpha: 0.06)
+                  : Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -216,7 +224,9 @@ class _CourseSearchFieldState extends State<CourseSearchField> {
                   ? IconButton(
                       icon: Icon(
                         Icons.close_rounded,
-                        color: isDark ? const Color(0xFFADB4C4) : const Color(0xFF6F7588),
+                        color: isDark
+                            ? const Color(0xFFADB4C4)
+                            : const Color(0xFF6F7588),
                         size: 20,
                       ),
                       onPressed: () {
@@ -305,22 +315,28 @@ class CourseFilterChip extends StatelessWidget {
                   end: Alignment.bottomRight,
                 )
               : null,
-          color: isSelected ? null : (isDark ? const Color(0xFF181B23) : Colors.white),
+          color: isSelected
+              ? null
+              : (isDark ? const Color(0xFF181B23) : Colors.white),
           borderRadius: BorderRadius.circular(99),
           border: isSelected
               ? null
-              : Border.all(color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2), width: 1.2),
+              : Border.all(
+                  color: isDark
+                      ? const Color(0xFF303542)
+                      : const Color(0xFFE9EBF2),
+                  width: 1.2),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.2),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                 ]
               : [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -341,7 +357,11 @@ class CourseFilterChip extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : (isDark ? const Color(0xFFADB4C4) : const Color(0xFF101936)),
+                  color: isSelected
+                      ? Colors.white
+                      : (isDark
+                          ? const Color(0xFFADB4C4)
+                          : const Color(0xFF101936)),
                   fontWeight: FontWeight.bold,
                   fontSize: 13.5,
                   fontFamily: 'Plus Jakarta Sans',

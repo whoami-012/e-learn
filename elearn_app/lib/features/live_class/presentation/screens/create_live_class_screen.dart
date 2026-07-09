@@ -38,15 +38,17 @@ class _CreateLiveClassScreenState extends State<CreateLiveClassScreen> {
     if (date == null || !mounted) return;
     final time = await showTimePicker(
         context: context, initialTime: TimeOfDay.fromDateTime(base));
-    if (time != null)
+    if (time != null) {
       setState(() {
         final value =
             DateTime(date.year, date.month, date.day, time.hour, time.minute);
-        if (isStart)
+        if (isStart) {
           start = value;
-        else
+        } else {
           end = value;
+        }
       });
+    }
   }
 
   @override
@@ -117,7 +119,10 @@ class _CreateLiveClassScreenState extends State<CreateLiveClassScreen> {
                               description: description.text.trim(),
                               startsAt: start,
                               endsAt: end);
-                      if (ok && mounted) Navigator.pop(context);
+                      if (!context.mounted) return;
+                      if (ok) {
+                        Navigator.pop(context);
+                      }
                     },
               child: state.isLoading
                   ? const SizedBox.square(

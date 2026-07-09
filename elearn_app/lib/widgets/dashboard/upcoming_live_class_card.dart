@@ -205,7 +205,7 @@ class UpcomingLiveClassCard extends StatelessWidget {
                   errorBuilder: (context, error, stackTrace) => Container(
                     margin: const EdgeInsets.only(bottom: 24, right: 24),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       shape: BoxShape.circle,
                     ),
                     padding: const EdgeInsets.all(16.0),
@@ -308,7 +308,7 @@ class UpcomingLiveClassCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16.0),
                         ),
                         elevation: 4.0,
-                        shadowColor: AppColors.orange.withOpacity(0.4),
+                        shadowColor: AppColors.orange.withValues(alpha: 0.4),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,

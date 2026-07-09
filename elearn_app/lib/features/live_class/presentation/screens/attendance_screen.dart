@@ -23,13 +23,16 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       body: FutureBuilder<List<LiveClassAttendance>>(
           future: future,
           builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done)
+            if (snapshot.connectionState != ConnectionState.done) {
               return const Center(child: CircularProgressIndicator());
-            if (snapshot.hasError)
+            }
+            if (snapshot.hasError) {
               return Center(child: Text(snapshot.error.toString()));
+            }
             final rows = snapshot.data!;
-            if (rows.isEmpty)
+            if (rows.isEmpty) {
               return const Center(child: Text('No students have joined.'));
+            }
             return ListView.builder(
                 itemCount: rows.length,
                 itemBuilder: (_, i) {

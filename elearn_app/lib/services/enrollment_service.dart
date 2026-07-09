@@ -12,7 +12,6 @@ import '../core/network/http_client.dart';
 import '../models/enrollment.dart';
 
 class EnrollmentService {
-  static const _headers = {'Content-Type': 'application/json'};
 
   static Map<String, dynamic> _handleResponse(http.Response response) {
     var body = <String, dynamic>{};

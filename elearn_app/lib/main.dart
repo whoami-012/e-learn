@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/course_provider.dart';
@@ -12,8 +14,17 @@ import 'providers/theme_provider.dart';
 import 'providers/message_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/splash/auth_check_screen.dart';
+import 'services/auth_service.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Native Firebase reads google-services.json/GoogleService-Info.plist.
+  // This app does not use Firebase services on web; Google Sign-In exchanges
+  // its OAuth ID token directly with the FastAPI backend.
+  if (!kIsWeb) {
+    await Firebase.initializeApp();
+  }
+  await AuthService.initializeGoogleSignIn();
   runApp(const ELearnApp());
 }
 

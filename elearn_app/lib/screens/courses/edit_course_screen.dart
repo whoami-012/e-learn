@@ -9,7 +9,6 @@ import '../../providers/course_provider.dart';
 import '../../services/upload_service.dart';
 import '../../core/constants/app_constants.dart';
 
-
 class EditCourseScreen extends StatefulWidget {
   final String courseId;
 
@@ -20,23 +19,23 @@ class EditCourseScreen extends StatefulWidget {
 }
 
 class _EditCourseScreenState extends State<EditCourseScreen> {
-  final _formKey   = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleCtrl;
   late TextEditingController _descCtrl;
   late TextEditingController _priceCtrl;
 
-  bool    _isFree       = false;
-  bool    _initialized  = false;
-  XFile?  _pickedImage;             // newly picked local file
-  String? _currentThumbnailUrl;     // existing URL from backend
-  String? _uploadedUrl;             // URL after new upload
-  bool    _isUploading  = false;
+  bool _isFree = false;
+  bool _initialized = false;
+  XFile? _pickedImage; // newly picked local file
+  String? _currentThumbnailUrl; // existing URL from backend
+  String? _uploadedUrl; // URL after new upload
+  bool _isUploading = false;
 
   @override
   void initState() {
     super.initState();
     _titleCtrl = TextEditingController();
-    _descCtrl  = TextEditingController();
+    _descCtrl = TextEditingController();
     _priceCtrl = TextEditingController();
 
     debugPrint('[EditCourseScreen] courseId received: ${widget.courseId}');
@@ -54,15 +53,16 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
     super.dispose();
   }
 
-  void _prefillForm(course) {
+  void _prefillForm(Course course) {
     if (_initialized) return;
-    _initialized            = true;
-    _titleCtrl.text         = course.title;
-    _descCtrl.text          = course.description;
-    _priceCtrl.text         = course.price.toStringAsFixed(0);
-    _currentThumbnailUrl    = course.thumbnailUrl;
+    _initialized = true;
+    _titleCtrl.text = course.title;
+    _descCtrl.text = course.description;
+    _priceCtrl.text = course.price.toStringAsFixed(0);
+    _currentThumbnailUrl = course.thumbnailUrl;
     setState(() => _isFree = course.isFree);
-    debugPrint('[EditCourseScreen] Pre-filled, thumbnailUrl: $_currentThumbnailUrl');
+    debugPrint(
+        '[EditCourseScreen] Pre-filled, thumbnailUrl: $_currentThumbnailUrl');
   }
 
   // ── Thumbnail picker ────────────────────────────────────────────────────────
@@ -107,7 +107,8 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
           children: [
             const SizedBox(height: 8),
             Container(
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: Colors.grey.shade300,
                 borderRadius: BorderRadius.circular(2),
@@ -141,8 +142,8 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
                 onTap: () {
                   Navigator.pop(context);
                   setState(() {
-                    _pickedImage         = null;
-                    _uploadedUrl         = null;
+                    _pickedImage = null;
+                    _uploadedUrl = null;
                     _currentThumbnailUrl = null;
                   });
                 },
@@ -188,15 +189,15 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
     final thumbnailUrl = _uploadedUrl ?? _currentThumbnailUrl;
 
     final data = CourseUpdate(
-      title:        _titleCtrl.text.trim(),
-      description:  _descCtrl.text.trim(),
-      price:        _isFree ? 0 : double.parse(_priceCtrl.text.trim()),
-      isFree:       _isFree,
+      title: _titleCtrl.text.trim(),
+      description: _descCtrl.text.trim(),
+      price: _isFree ? 0 : double.parse(_priceCtrl.text.trim()),
+      isFree: _isFree,
       thumbnailUrl: thumbnailUrl,
     );
 
     final provider = context.read<CourseProvider>();
-    final success  = await provider.updateCourse(widget.courseId, data);
+    final success = await provider.updateCourse(widget.courseId, data);
 
     if (!mounted) return;
 
@@ -254,8 +255,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
                   const Text('Could not load course data.'),
                   const SizedBox(height: 12),
                   FilledButton.tonal(
-                    onPressed: () =>
-                        provider.fetchCourseById(widget.courseId),
+                    onPressed: () => provider.fetchCourseById(widget.courseId),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -277,12 +277,12 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
                   children: [
                     // ── Thumbnail picker ─────────────────────────────────
                     _EditThumbnailPicker(
-                      pickedImage:         _pickedImage,
-                      isUploading:         _isUploading,
-                      uploadedUrl:         _uploadedUrl,
+                      pickedImage: _pickedImage,
+                      isUploading: _isUploading,
+                      uploadedUrl: _uploadedUrl,
                       currentThumbnailUrl: _currentThumbnailUrl,
-                      onTap:               _showImageSourceSheet,
-                      color:               color.primary,
+                      onTap: _showImageSourceSheet,
+                      color: color.primary,
                     ),
 
                     const SizedBox(height: 20),
@@ -356,7 +356,8 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
                             (isSubmitting || _isUploading) ? null : _submit,
                         icon: (isSubmitting || _isUploading)
                             ? const SizedBox(
-                                width: 18, height: 18,
+                                width: 18,
+                                height: 18,
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2.5, color: Colors.white),
                               )
@@ -390,12 +391,12 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _EditThumbnailPicker extends StatelessWidget {
-  final XFile?  pickedImage;
-  final bool    isUploading;
+  final XFile? pickedImage;
+  final bool isUploading;
   final String? uploadedUrl;
   final String? currentThumbnailUrl;
   final VoidCallback onTap;
-  final Color   color;
+  final Color color;
 
   const _EditThumbnailPicker({
     required this.pickedImage,
@@ -408,18 +409,17 @@ class _EditThumbnailPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 160,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: uploadedUrl != null
                 ? Colors.green.shade300
-                : color.withOpacity(0.3),
+                : color.withValues(alpha: 0.3),
             width: uploadedUrl != null ? 2 : 1.5,
           ),
         ),
@@ -441,7 +441,8 @@ class _EditThumbnailPicker extends StatelessWidget {
                       Image.file(File(pickedImage!.path), fit: BoxFit.cover),
                       if (uploadedUrl != null)
                         Positioned(
-                          top: 8, right: 8,
+                          top: 8,
+                          right: 8,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
@@ -465,7 +466,8 @@ class _EditThumbnailPicker extends StatelessWidget {
                           ),
                         ),
                       Positioned(
-                        bottom: 8, right: 8,
+                        bottom: 8,
+                        right: 8,
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
@@ -496,7 +498,8 @@ class _EditThumbnailPicker extends StatelessWidget {
                             ),
                           ),
                           Positioned(
-                            bottom: 8, right: 8,
+                            bottom: 8,
+                            right: 8,
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
@@ -514,7 +517,7 @@ class _EditThumbnailPicker extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.add_photo_alternate_rounded,
-                              size: 40, color: color.withOpacity(0.7)),
+                              size: 40, color: color.withValues(alpha: 0.7)),
                           const SizedBox(height: 8),
                           Text('Add Thumbnail',
                               style: TextStyle(
@@ -524,12 +527,10 @@ class _EditThumbnailPicker extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text('JPEG · PNG · WebP · Max 5 MB',
                               style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 12)),
+                                  color: Colors.grey.shade500, fontSize: 12)),
                         ],
                       ),
       ),
     );
   }
 }
-

@@ -40,6 +40,8 @@ class _MockPaymentScreenState extends State<MockPaymentScreen> {
       // 3. Update Enrollment status in provider
       await context.read<EnrollmentProvider>().checkEnrollment(widget.course.id);
 
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Payment Successful! You are now enrolled.'),
@@ -138,7 +140,7 @@ class _MockPaymentScreenState extends State<MockPaymentScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.pastelPink,
                     borderRadius: BorderRadius.circular(AppRadius.medium),
-                    border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     _error!,

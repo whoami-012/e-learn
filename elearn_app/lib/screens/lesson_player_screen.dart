@@ -137,7 +137,7 @@ class _LessonPlayerScreenState extends State<LessonPlayerScreen> {
 
                   return ListTile(
                     selected: isCurrent,
-                    selectedTileColor: AppColors.primarySoft.withOpacity(0.4),
+                    selectedTileColor: AppColors.primarySoft.withValues(alpha: 0.4),
                     onTap: () {
                       if (isLessonLocked) {
                         ScaffoldMessenger.of(context).showSnackBar(

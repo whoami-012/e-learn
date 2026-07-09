@@ -4,13 +4,10 @@ import '../../providers/course_provider.dart';
 import '../../providers/enrollment_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../core/constants/app_constants.dart';
 import 'edit_course_screen.dart';
-import 'notes_screen.dart';
 import '../lesson_player_screen.dart';
 import '../../services/course_service.dart';
 import 'mock_payment_screen.dart';
-import '../exams/exam_list_screen.dart';
 import '../exams/faculty_exam_management_screen.dart';
 import 'faculty_lesson_management_screen.dart';
 
@@ -18,7 +15,6 @@ import '../../models/course.dart';
 import '../../models/lesson.dart';
 import '../../widgets/courses/course_states.dart';
 import '../../widgets/courses/course_detail_widgets.dart';
-import '../../features/live_class/data/models/live_class.dart';
 import '../../features/live_class/presentation/controllers/live_class_controller.dart';
 
 class CourseDetailScreen extends StatefulWidget {
@@ -45,10 +41,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     });
   }
 
-  Future<void> _onWatchLessons(BuildContext context) async {
+  Future<void> _onWatchLessons() async {
     final provider = context.read<CourseProvider>();
     final isEnrolled = context.read<EnrollmentProvider>().isEnrolled;
-    
+
     // Show loading dialog
     showDialog(
       context: context,
@@ -67,7 +63,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
       if (provider.lessons.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No lessons available for this course yet.')),
+          const SnackBar(
+              content: Text('No lessons available for this course yet.')),
         );
         return;
       }
@@ -96,7 +93,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     if (isLocked) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('This lesson is locked. Enroll in the course to unlock.'),
+          content:
+              Text('This lesson is locked. Enroll in the course to unlock.'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -116,7 +114,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   List<String> _generateOutcomes(String title) {
     final t = title.toLowerCase();
-    if (t.contains('python') || t.contains('code') || t.contains('programming')) {
+    if (t.contains('python') ||
+        t.contains('code') ||
+        t.contains('programming')) {
       return [
         'Understand Python syntax, core structures, and control flows.',
         'Apply object-oriented design and module architecture.',
@@ -124,7 +124,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         'Integrate file operations, API testing, and exception handling.'
       ];
     }
-    if (t.contains('english') || t.contains('speaking') || t.contains('conversation')) {
+    if (t.contains('english') ||
+        t.contains('speaking') ||
+        t.contains('conversation')) {
       return [
         'Speak confidently in real-world everyday contexts.',
         'Improve pronunciation, accent, and conversational pauses.',
@@ -151,7 +153,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           return const ClassDetailLoadingView();
         }
 
-        if (courseProvider.error != null && courseProvider.selectedCourse == null) {
+        if (courseProvider.error != null &&
+            courseProvider.selectedCourse == null) {
           return ClassDetailErrorView(
             error: courseProvider.error!,
             onRetry: () => courseProvider.fetchCourseById(widget.courseId),
@@ -168,7 +171,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
         // Check live class status from controller state
         final liveClassController = context.watch<LiveClassController>();
-        final bool isLive = liveClassController.classes.any((c) => c.courseId == course.id && c.status == 'live');
+        final bool isLive = liveClassController.classes
+            .any((c) => c.courseId == course.id && c.status == 'live');
 
         return Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -178,7 +182,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 // 1. Connection Warning Alert (if offline)
                 if (isOffline)
                   OfflineBanner(
-                    message: "You're offline. Showing saved course information.",
+                    message:
+                        "You're offline. Showing saved course information.",
                     onRetry: () {
                       courseProvider.fetchCourseById(widget.courseId);
                       courseProvider.fetchLessons(widget.courseId);
@@ -200,13 +205,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         CourseHeroCard(
                           course: course,
                           isLive: isLive,
-                          onPlayTap: () => _onWatchLessons(context),
+                          onPlayTap: () => _onWatchLessons(),
                         ),
                         _buildCoursePrimaryInfo(course),
                         CourseInstructorCard(
-                          name: isFacultyOrAdmin ? 'You (Faculty Mode)' : 'Dr. Alan Smith',
-                          subtitle: isFacultyOrAdmin 
-                              ? 'Authorized Course Administrator' 
+                          name: isFacultyOrAdmin
+                              ? 'You (Faculty Mode)'
+                              : 'Dr. Alan Smith',
+                          subtitle: isFacultyOrAdmin
+                              ? 'Authorized Course Administrator'
                               : 'Senior Software Engineer & Educator',
                         ),
                         const SizedBox(height: AppSpacing.md),
@@ -215,7 +222,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       ] else if (_selectedTabIndex == 1) ...[
                         // Lessons Tab components
                         _buildTabBar(),
-                        _buildLessonsTabContent(courseProvider.lessons, isEnrolled),
+                        _buildLessonsTabContent(
+                            courseProvider.lessons, isEnrolled),
                       ] else ...[
                         // Reviews Tab components
                         _buildTabBar(),
@@ -239,7 +247,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       color: theme.scaffoldBackgroundColor,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -269,7 +278,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             child: Center(
               child: _selectedTabIndex > 0
                   ? Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                       child: Text(
                         course.title,
                         style: TextStyle(
@@ -292,7 +302,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(_isBookmarked ? 'Course bookmarked!' : 'Bookmark removed.'),
+                  content: Text(_isBookmarked
+                      ? 'Course bookmarked!'
+                      : 'Bookmark removed.'),
                   duration: const Duration(seconds: 1),
                 ),
               );
@@ -308,7 +320,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 boxShadow: AppTheme.miniShadow,
               ),
               child: Icon(
-                _isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                _isBookmarked
+                    ? Icons.bookmark_rounded
+                    : Icons.bookmark_border_rounded,
                 color: _isBookmarked ? colors.primary : colors.onSurface,
                 size: 20,
               ),
@@ -355,7 +369,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              Icon(Icons.access_time_rounded, size: 14, color: colors.onSurfaceVariant),
+              Icon(Icons.access_time_rounded,
+                  size: 14, color: colors.onSurfaceVariant),
               const SizedBox(width: 4),
               Text(
                 '6 Weeks',
@@ -527,11 +542,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.video_library_rounded, size: 48, color: colors.onSurfaceVariant),
+              Icon(Icons.video_library_rounded,
+                  size: 48, color: colors.onSurfaceVariant),
               const SizedBox(height: AppSpacing.md),
               Text(
                 'No lessons available for this course yet.',
-                style: TextStyle(color: colors.onSurfaceVariant, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: colors.onSurfaceVariant,
+                    fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -540,7 +558,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     }
 
     // Dynamic completed lessons calculation
-    final int completedCount = isEnrolled ? (lessons.length >= 2 ? 2 : lessons.length) : 0;
+    final int completedCount =
+        isEnrolled ? (lessons.length >= 2 ? 2 : lessons.length) : 0;
 
     return Column(
       children: [
@@ -580,7 +599,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: colors.onSurfaceVariant),
+              Icon(Icons.keyboard_arrow_down_rounded,
+                  size: 16, color: colors.onSurfaceVariant),
             ],
           ),
         ),
@@ -619,17 +639,23 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.star_rounded, color: AppColors.orange, size: 16),
-                      Icon(Icons.star_rounded, color: AppColors.orange, size: 16),
-                      Icon(Icons.star_rounded, color: AppColors.orange, size: 16),
-                      Icon(Icons.star_rounded, color: AppColors.orange, size: 16),
-                      Icon(Icons.star_rounded, color: AppColors.orange, size: 16),
+                      Icon(Icons.star_rounded,
+                          color: AppColors.orange, size: 16),
+                      Icon(Icons.star_rounded,
+                          color: AppColors.orange, size: 16),
+                      Icon(Icons.star_rounded,
+                          color: AppColors.orange, size: 16),
+                      Icon(Icons.star_rounded,
+                          color: AppColors.orange, size: 16),
+                      Icon(Icons.star_rounded,
+                          color: AppColors.orange, size: 16),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '48 Reviews',
-                    style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
+                    style:
+                        TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -653,19 +679,22 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           name: 'Sarah Connor',
           rating: 5.0,
           date: '2 days ago',
-          text: 'This course is incredibly well-structured. The instructor explains everything clearly and the projects are very helpful.',
+          text:
+              'This course is incredibly well-structured. The instructor explains everything clearly and the projects are very helpful.',
         ),
         const ReviewTile(
           name: 'Michael Scott',
           rating: 4.0,
           date: '1 week ago',
-          text: 'Very good introduction. A bit fast in the middle but overall excellent value.',
+          text:
+              'Very good introduction. A bit fast in the middle but overall excellent value.',
         ),
         const ReviewTile(
           name: 'Dwight Schrute',
           rating: 5.0,
           date: '2 weeks ago',
-          text: 'Perfect. Learnt exactly what I needed to manage my tasks better. Five stars.',
+          text:
+              'Perfect. Learnt exactly what I needed to manage my tasks better. Five stars.',
         ),
       ],
     );
@@ -678,7 +707,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       children: [
         Text(
           '$stars',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: colors.onSurface),
+          style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: colors.onSurface),
         ),
         const SizedBox(width: 4),
         const Icon(Icons.star_rounded, color: AppColors.orange, size: 12),
@@ -702,7 +734,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
-  Widget _buildStickyBottomBar(Course course, bool isEnrolled, EnrollmentProvider enrollmentProvider) {
+  Widget _buildStickyBottomBar(
+      Course course, bool isEnrolled, EnrollmentProvider enrollmentProvider) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final role = context.read<UserProvider>().role;
@@ -754,34 +787,50 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               child: SizedBox(
                 height: 52,
                 child: enrollmentProvider.isLoading
-                    ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(colors.primary)))
+                    ? Center(
+                        child: CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(colors.primary)))
                     : ElevatedButton(
                         onPressed: () async {
                           if (isEnrolled) {
-                            _onWatchLessons(context);
+                            _onWatchLessons();
                           } else {
                             if (course.isFree) {
-                              await context.read<EnrollmentProvider>().enroll(course.id);
+                              await context
+                                  .read<EnrollmentProvider>()
+                                  .enroll(course.id);
                             } else {
                               final success = await Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => MockPaymentScreen(course: course)),
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        MockPaymentScreen(course: course)),
                               );
                               if (success == true && mounted) {
-                                context.read<EnrollmentProvider>().checkEnrollment(course.id);
+                                context
+                                    .read<EnrollmentProvider>()
+                                    .checkEnrollment(course.id);
                               }
                             }
                           }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colors.primary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppRadius.medium)),
                         ),
                         child: Text(
                           isEnrolled
                               ? 'Continue Learning'
-                              : (course.isFree ? 'Enroll Now for Free' : 'Purchase Course'),
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                              : (course.isFree
+                                  ? 'Enroll Now for Free'
+                                  : 'Purchase Course'),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
                         ),
                       ),
               ),
@@ -796,7 +845,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      margin: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: colors.surface,
@@ -823,7 +873,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => EditCourseScreen(courseId: course.id)),
+                MaterialPageRoute(
+                    builder: (_) => EditCourseScreen(courseId: course.id)),
               );
             },
           ),
@@ -852,7 +903,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => FacultyExamManagementScreen(courseId: course.id)),
+                MaterialPageRoute(
+                    builder: (_) =>
+                        FacultyExamManagementScreen(courseId: course.id)),
               );
             },
           ),
@@ -861,7 +914,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             icon: Icons.play_circle_outline,
             label: 'Preview Course Lessons',
             color: colors.onSurfaceVariant,
-            onTap: () => _onWatchLessons(context),
+            onTap: _onWatchLessons,
           ),
           const SizedBox(height: AppSpacing.md),
           const Divider(),
@@ -875,12 +928,16 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   context: context,
                   builder: (ctx) => AlertDialog(
                     title: const Text('Delete Course?'),
-                    content: const Text('This will permanently delete the course and all its materials.'),
+                    content: const Text(
+                        'This will permanently delete the course and all its materials.'),
                     actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                      TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancel')),
                       FilledButton(
                         onPressed: () => Navigator.pop(ctx, true),
-                        style: FilledButton.styleFrom(backgroundColor: colors.error),
+                        style: FilledButton.styleFrom(
+                            backgroundColor: colors.error),
                         child: const Text('Delete'),
                       ),
                     ],
@@ -891,12 +948,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   try {
                     await CourseService.deleteCourse(course.id);
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Course deleted successfully')));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('Course deleted successfully')));
                       Navigator.pop(context); // Go back after deletion
                     }
                   } catch (e) {
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Delete failed: $e')));
                     }
                   }
                 }
@@ -904,7 +963,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: colors.error,
                 side: BorderSide(color: colors.error, width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.medium)),
               ),
               icon: const Icon(Icons.delete_outline, size: 20),
               label: const Text('Delete Course'),
@@ -932,7 +992,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             backgroundColor: color,
             foregroundColor: Colors.white,
             elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.medium)),
           ),
           icon: Icon(icon, size: 20),
           label: Text(label),
@@ -948,10 +1009,12 @@ class ExpandableCourseDescription extends StatefulWidget {
   const ExpandableCourseDescription({required this.description, super.key});
 
   @override
-  State<ExpandableCourseDescription> createState() => _ExpandableCourseDescriptionState();
+  State<ExpandableCourseDescription> createState() =>
+      _ExpandableCourseDescriptionState();
 }
 
-class _ExpandableCourseDescriptionState extends State<ExpandableCourseDescription> {
+class _ExpandableCourseDescriptionState
+    extends State<ExpandableCourseDescription> {
   bool _isExpanded = false;
 
   @override
@@ -983,7 +1046,9 @@ class _ExpandableCourseDescriptionState extends State<ExpandableCourseDescriptio
               color: colors.onSurfaceVariant,
             ),
           ),
-          crossFadeState: _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          crossFadeState: _isExpanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
           duration: const Duration(milliseconds: 200),
         ),
         if (isLong)

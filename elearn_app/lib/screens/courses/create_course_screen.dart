@@ -343,12 +343,12 @@ class _ThumbnailPicker extends StatelessWidget {
       child: Container(
         height: 160,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: uploadedUrl != null
                 ? Colors.green.shade300
-                : color.withOpacity(0.3),
+                : color.withValues(alpha: 0.3),
             width: uploadedUrl != null ? 2 : 1.5,
             strokeAlign: BorderSide.strokeAlignInside,
           ),
@@ -417,7 +417,7 @@ class _ThumbnailPicker extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.add_photo_alternate_rounded,
-                          size: 40, color: color.withOpacity(0.7)),
+                          size: 40, color: color.withValues(alpha: 0.7)),
                       const SizedBox(height: 8),
                       Text('Add Thumbnail',
                           style: TextStyle(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
 import '../dashboard/shimmer_skeletons.dart';
 
 /// Style class containing color configurations for specific course categories.
@@ -111,13 +110,13 @@ class _CourseListCardState extends State<CourseListCard> {
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.2 : 0.045),
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.045),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
               ],
               border: Border.all(
-                color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withOpacity(0.5),
+                color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withValues(alpha: 0.5),
                 width: 1,
               ),
             ),
@@ -130,8 +129,8 @@ class _CourseListCardState extends State<CourseListCard> {
                   onTapDown: (_) => setState(() => _scale = 0.985),
                   onTapUp: (_) => setState(() => _scale = 1.0),
                   onTapCancel: () => setState(() => _scale = 1.0),
-                  splashColor: theme.colorScheme.primary.withOpacity(0.04),
-                  highlightColor: theme.colorScheme.primary.withOpacity(0.01),
+                  splashColor: theme.colorScheme.primary.withValues(alpha: 0.04),
+                  highlightColor: theme.colorScheme.primary.withValues(alpha: 0.01),
                   child: Padding(
                     padding: const EdgeInsets.all(14.0),
                     child: Row(
@@ -371,7 +370,7 @@ class CourseThumbnail extends StatelessWidget {
                 Text(
                   initials,
                   style: TextStyle(
-                    color: iconColor.withOpacity(0.85),
+                    color: iconColor.withValues(alpha: 0.85),
                     fontWeight: FontWeight.w800,
                     fontSize: 16,
                     letterSpacing: 0.5,

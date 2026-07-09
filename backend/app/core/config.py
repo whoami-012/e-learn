@@ -59,6 +59,9 @@ class Settings:
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))   # Fix #8: cast to int
     REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))        # Fix #5: new setting
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    APPLE_CLIENT_IDS: tuple[str, ...] = tuple(
+        value.strip() for value in os.getenv("APPLE_CLIENT_IDS", "").split(",") if value.strip()
+    )
     AGORA_APP_ID: str = os.getenv("AGORA_APP_ID", "")
     AGORA_APP_CERTIFICATE: str = os.getenv("AGORA_APP_CERTIFICATE", "")
     LIVE_CLASS_EARLY_JOIN_MINUTES: int = int(os.getenv("LIVE_CLASS_EARLY_JOIN_MINUTES", "10"))
@@ -68,7 +71,7 @@ class Settings:
     MESSAGE_MAX_FILE_SIZE_BYTES: int = int(os.getenv("MESSAGE_MAX_FILE_SIZE_BYTES", "10485760"))
     MESSAGE_MAX_ATTACHMENTS_PER_MESSAGE: int = int(os.getenv("MESSAGE_MAX_ATTACHMENTS_PER_MESSAGE", "1"))
     MESSAGE_ALLOWED_EXTENSIONS: tuple[str, ...] = _csv_setting(
-        "MESSAGE_ALLOWED_EXTENSIONS", "pdf,doc,docx,ppt,pptx,xls,xlsx,txt,csv,jpg,jpeg,png"
+        "MESSAGE_ALLOWED_EXTENSIONS", "pdf,doc,docx,ppt,pptx,xls,xlsx,txt,csv,jpg,jpeg,png,mp4,mov,3gp,webm,mkv"
     )
     MESSAGE_RATE_LIMIT_PER_MINUTE: int = int(os.getenv("MESSAGE_RATE_LIMIT_PER_MINUTE", "30"))
     MESSAGE_CONVERSATION_RATE_LIMIT_PER_MINUTE: int = int(

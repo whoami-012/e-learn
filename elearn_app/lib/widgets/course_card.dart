@@ -32,7 +32,7 @@ class CourseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageUrl = _fullImageUrl(course.thumbnailUrl);
     final baseColor = gradient.colors.first;
-    final softBg = baseColor.withOpacity(0.08);
+    final softBg = baseColor.withValues(alpha: 0.08);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -43,7 +43,7 @@ class CourseCard extends StatelessWidget {
           border: Border.all(color: Colors.white, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: baseColor.withOpacity(0.06),
+              color: baseColor.withValues(alpha: 0.06),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -54,8 +54,8 @@ class CourseCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(22),
-            splashColor: baseColor.withOpacity(0.05),
-            highlightColor: baseColor.withOpacity(0.02),
+            splashColor: baseColor.withValues(alpha: 0.05),
+            highlightColor: baseColor.withValues(alpha: 0.02),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -82,7 +82,7 @@ class CourseCard extends StatelessWidget {
                                   height: 16,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(baseColor.withOpacity(0.2)),
+                                    valueColor: AlwaysStoppedAnimation<Color>(baseColor.withValues(alpha: 0.2)),
                                   ),
                                 ),
                               );
@@ -155,14 +155,14 @@ class CourseCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withOpacity(0.1), color.withOpacity(0.2)],
+          colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.2)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
       child: Icon(
         Icons.image_outlined,
-        color: color.withOpacity(0.4),
+        color: color.withValues(alpha: 0.4),
         size: 24,
       ),
     );
@@ -190,7 +190,7 @@ class _MetaItem extends StatelessWidget {
         Icon(
           icon,
           size: 14,
-          color: AppTheme.textSecondary.withOpacity(0.8),
+          color: AppTheme.textSecondary.withValues(alpha: 0.8),
         ),
         const SizedBox(width: 4),
         Text(

@@ -1,6 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
-from jose import JWTError
+from jose import JWTError, jwk, jwt
+import httpx
+from uuid import UUID
 from google.auth.exceptions import GoogleAuthError
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
@@ -17,6 +19,7 @@ from app.core.security import (
 )
 from fastapi import HTTPException, status
 from app.core.config import settings
+from app.core.permissions import require_active_user
 
 
 # 🔹 Create User (Register)
@@ -77,6 +80,23 @@ async def authenticate_user(db: AsyncSession, email: str, password: str):
         )
 
     return user
+
+
+async def change_password(
+    db: AsyncSession,
+    user: User,
+    current_password: str,
+    new_password: str,
+) -> None:
+    """Verify the current password before replacing the stored password hash."""
+    if not user.password_hash or not verify_password(current_password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
+        )
+
+    user.password_hash = hash_password(new_password)
+    await db.commit()
 
 
 def verify_google_id_token(token: str) -> dict:
@@ -177,6 +197,69 @@ async def authenticate_google_user(db: AsyncSession, claims: dict) -> User:
     return user
 
 
+def verify_apple_id_token(token: str) -> dict:
+    if not settings.APPLE_CLIENT_IDS:
+        raise HTTPException(status_code=503, detail="Apple Sign-In is not configured")
+    try:
+        header = jwt.get_unverified_header(token)
+        response = httpx.get("https://appleid.apple.com/auth/keys", timeout=10.0)
+        response.raise_for_status()
+        key_data = next(key for key in response.json()["keys"] if key["kid"] == header["kid"])
+        public_key = jwk.construct(key_data, algorithm="RS256").to_pem()
+        claims = None
+        for audience in settings.APPLE_CLIENT_IDS:
+            try:
+                claims = jwt.decode(token, public_key, algorithms=["RS256"], audience=audience,
+                                    issuer="https://appleid.apple.com")
+                break
+            except JWTError:
+                continue
+        if claims is None:
+            raise JWTError("Invalid audience")
+    except (KeyError, StopIteration, ValueError, JWTError, httpx.HTTPError):
+        raise HTTPException(status_code=401, detail="Invalid or expired Apple ID token")
+    if not claims.get("sub"):
+        raise HTTPException(status_code=401, detail="Invalid Apple token payload")
+    return claims
+
+
+async def authenticate_apple_user(db: AsyncSession, claims: dict,
+                                  first_name: str | None, last_name: str | None) -> User:
+    apple_id = claims["sub"]
+    email = claims.get("email")
+    filters = [User.apple_id == apple_id]
+    if email:
+        email = email.lower().strip()
+        filters.append(func.lower(User.email) == email)
+    result = await db.execute(select(User).where(or_(*filters)))
+    matches = result.scalars().all()
+    by_apple = next((item for item in matches if item.apple_id == apple_id), None)
+    by_email = next((item for item in matches if email and item.email.lower() == email), None)
+    if by_apple and by_email and by_apple.id != by_email.id:
+        raise HTTPException(status_code=409, detail="Apple account is already linked to another user")
+    user = by_apple or by_email
+    if user:
+        if not user.is_active or user.is_deleted:
+            raise HTTPException(status_code=403, detail="Account access denied")
+        user.apple_id = apple_id
+        user.email_verified = True
+    else:
+        if not email:
+            raise HTTPException(status_code=400, detail="Apple account did not provide an email address")
+        name = " ".join(part for part in (first_name, last_name) if part).strip()
+        user = User(email=email, name=name or email.split("@", 1)[0], password_hash=None,
+                    role="student", auth_provider="apple", apple_id=apple_id,
+                    email_verified=True)
+        db.add(user)
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="Apple account or email is already registered")
+    await db.refresh(user)
+    return user
+
+
 # 🔹 Create Tokens
 def create_tokens(user: User) -> dict:
     # Fix #1: pass sub and role as separate positional args (not a dict, not str(a, b))
@@ -191,7 +274,7 @@ def create_tokens(user: User) -> dict:
 
 
 # 🔹 Refresh Access Token
-def refresh_access_token(refresh_token: str) -> dict:
+async def refresh_access_token(db: AsyncSession, refresh_token: str) -> dict:
     # Fix #2: decode_token raises JWTError on failure — it never returns None
     try:
         payload = decode_token(refresh_token)
@@ -209,17 +292,24 @@ def refresh_access_token(refresh_token: str) -> dict:
         )
 
     user_id = payload.get("sub")
-    user_role = payload.get("role")
-
-    if not user_id or not user_role:
+    if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
         )
 
-    # Fix #4: return both access AND refresh token (TokenResponse requires both)
-    return {
-        "access_token":  create_access_token(user_id, user_role),
-        "refresh_token": create_refresh_token(user_id, user_role),
-        "token_type":    "bearer",
-    }
+    try:
+        user_uuid = UUID(user_id)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+        ) from exc
+
+    result = await db.execute(select(User).where(User.id == user_uuid))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+
+    require_active_user(user)
+    return create_tokens(user)

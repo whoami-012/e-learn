@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/course_provider.dart';
 import '../../theme/app_theme.dart';
-import '../../models/lesson.dart';
 
 class FacultyLessonManagementScreen extends StatefulWidget {
   final String courseId;
@@ -33,7 +32,7 @@ class _FacultyLessonManagementScreenState
   String _extractVideoId(String input) {
     input = input.trim();
     if (input.isEmpty) return '';
-    
+
     // Regular expressions for various YouTube URL patterns
     final RegExp regExp1 = RegExp(
       r'^https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})',
@@ -70,7 +69,8 @@ class _FacultyLessonManagementScreenState
   void _showAddLessonDialog(int currentLessonsCount) {
     final titleCtrl = TextEditingController();
     final urlOrIdCtrl = TextEditingController();
-    final orderCtrl = TextEditingController(text: currentLessonsCount.toString());
+    final orderCtrl =
+        TextEditingController(text: currentLessonsCount.toString());
     bool isPreview = false;
     bool isSubmitting = false;
 
@@ -113,11 +113,15 @@ class _FacultyLessonManagementScreenState
                 contentPadding: EdgeInsets.zero,
                 title: const Text(
                   'Free Preview Lesson',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary),
                 ),
                 subtitle: const Text(
                   'Allow non-enrolled users to watch this lesson.',
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style:
+                      TextStyle(fontSize: 12, color: AppColors.textSecondary),
                 ),
                 value: isPreview,
                 onChanged: (val) {
@@ -125,7 +129,7 @@ class _FacultyLessonManagementScreenState
                     isPreview = val;
                   });
                 },
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
               ),
             ],
           ),
@@ -143,23 +147,32 @@ class _FacultyLessonManagementScreenState
                       final orderVal = int.tryParse(orderCtrl.text.trim());
 
                       if (title.isEmpty || rawUrl.isEmpty || orderVal == null) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          const SnackBar(content: Text('Please fill all required fields correctly.')),
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Please fill all required fields correctly.')),
                         );
                         return;
                       }
 
                       final videoId = _extractVideoId(rawUrl);
                       if (videoId.length != 11) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          const SnackBar(content: Text('Invalid YouTube Video ID (must be 11 characters).')),
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Invalid YouTube Video ID (must be 11 characters).')),
                         );
                         return;
                       }
 
+                      final courseProvider = context.read<CourseProvider>();
+                      final scaffoldMessenger = ScaffoldMessenger.of(context);
+                      final navigator = Navigator.of(ctx);
+
                       setDlg(() => isSubmitting = true);
                       try {
-                        final success = await context.read<CourseProvider>().createYoutubeLesson(
+                        final success =
+                            await courseProvider.createYoutubeLesson(
                           courseId: widget.courseId,
                           title: title,
                           videoId: videoId,
@@ -167,30 +180,38 @@ class _FacultyLessonManagementScreenState
                           isPreview: isPreview,
                         );
 
-                        if (success && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Recorded class added successfully!')),
+                        if (success) {
+                          scaffoldMessenger.showSnackBar(
+                            const SnackBar(
+                                content:
+                                    Text('Recorded class added successfully!')),
                           );
-                          Navigator.pop(ctx);
+                          navigator.pop();
                         } else {
-                          final errorMsg = context.read<CourseProvider>().error ?? 'Failed to add class';
-                          ScaffoldMessenger.of(ctx).showSnackBar(
+                          final errorMsg =
+                              courseProvider.error ?? 'Failed to add class';
+                          scaffoldMessenger.showSnackBar(
                             SnackBar(content: Text(errorMsg)),
                           );
                         }
                       } catch (e) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
+                        scaffoldMessenger.showSnackBar(
                           SnackBar(content: Text('Error: $e')),
                         );
                       } finally {
-                        setDlg(() => isSubmitting = false);
+                        if (context.mounted) {
+                          setDlg(() => isSubmitting = false);
+                        }
                       }
                     },
               child: isSubmitting
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white)),
                     )
                   : const Text('Add Class'),
             ),
@@ -214,7 +235,10 @@ class _FacultyLessonManagementScreenState
             const Text('Manage Recorded Classes'),
             Text(
               widget.courseTitle,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.normal, color: AppColors.textSecondary),
+              style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.normal,
+                  color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -225,7 +249,10 @@ class _FacultyLessonManagementScreenState
       body: Consumer<CourseProvider>(
         builder: (context, provider, _) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary)));
+            return const Center(
+                child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.primary)));
           }
 
           final lessons = provider.lessons;
@@ -237,11 +264,14 @@ class _FacultyLessonManagementScreenState
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.video_collection_outlined, size: 64, color: AppColors.textSecondary),
+                    const Icon(Icons.video_collection_outlined,
+                        size: 64, color: AppColors.textSecondary),
                     const SizedBox(height: AppSpacing.md),
                     Text(
                       'No recorded classes yet.',
-                      style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     const Text(
@@ -256,7 +286,8 @@ class _FacultyLessonManagementScreenState
 
           return ListView.builder(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 100),
+            padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md, AppSpacing.md, AppSpacing.md, 100),
             itemCount: lessons.length,
             itemBuilder: (context, index) {
               final lesson = lessons[index];
@@ -279,7 +310,8 @@ class _FacultyLessonManagementScreenState
                           color: AppColors.surfaceMuted,
                           borderRadius: BorderRadius.circular(AppRadius.small),
                           image: DecorationImage(
-                            image: NetworkImage('https://img.youtube.com/vi/${lesson.videoId}/0.jpg'),
+                            image: NetworkImage(
+                                'https://img.youtube.com/vi/${lesson.videoId}/0.jpg'),
                             fit: BoxFit.cover,
                             onError: (_, __) {},
                           ),
@@ -291,7 +323,8 @@ class _FacultyLessonManagementScreenState
                             color: Colors.black54,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 18),
+                          child: const Icon(Icons.play_arrow_rounded,
+                              color: Colors.white, size: 18),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.md),
@@ -314,15 +347,19 @@ class _FacultyLessonManagementScreenState
                               children: [
                                 Text(
                                   'Order: ${lesson.orderIndex}',
-                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                                  style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 11),
                                 ),
                                 if (lesson.isPreview) ...[
                                   const SizedBox(width: AppSpacing.sm),
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: AppColors.pastelMint,
-                                      borderRadius: BorderRadius.circular(AppRadius.small - 4),
+                                      borderRadius: BorderRadius.circular(
+                                          AppRadius.small - 4),
                                     ),
                                     child: Text(
                                       'Free Preview',
@@ -339,7 +376,10 @@ class _FacultyLessonManagementScreenState
                             const SizedBox(height: 2),
                             Text(
                               'ID: ${lesson.videoId}',
-                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontFamily: 'monospace'),
+                              style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 10,
+                                  fontFamily: 'monospace'),
                             ),
                           ],
                         ),
@@ -357,8 +397,11 @@ class _FacultyLessonManagementScreenState
           onPressed: () => _showAddLessonDialog(provider.lessons.length),
           backgroundColor: AppColors.primary,
           icon: const Icon(Icons.add, color: Colors.white),
-          label: const Text('Add Class', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.medium)),
+          label: const Text('Add Class',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.medium)),
         ),
       ),
     );

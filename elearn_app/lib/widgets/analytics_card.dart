@@ -54,7 +54,7 @@ class AnalyticsCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppRadius.small),
                   boxShadow: [
                     BoxShadow(
-                      color: stat.shadowColor.withOpacity(0.15),
+                      color: stat.shadowColor.withValues(alpha: 0.15),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),

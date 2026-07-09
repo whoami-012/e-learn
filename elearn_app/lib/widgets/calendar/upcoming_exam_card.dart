@@ -27,13 +27,13 @@ class UpcomingExamCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
           ],
           border: Border.all(
-            color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withOpacity(0.6),
+            color: isDark ? const Color(0xFF303542) : const Color(0xFFE9EBF2).withValues(alpha: 0.6),
             width: 1.2,
           ),
         ),

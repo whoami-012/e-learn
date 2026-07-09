@@ -112,9 +112,11 @@ class UserPasswordRequest(BaseModel):
     @field_validator("new_password")
     @classmethod
     def validate_new_password(cls, v: str) -> str:
-        """Ensure the new password meets the minimum length requirement."""
+        """Ensure the new password meets the registration password rules."""
         if len(v) < 8:
-            raise ValueError("Weak password")
+            raise ValueError("Password must be at least 8 characters")
+        if not any(char.isupper() for char in v):
+            raise ValueError("Password must contain an uppercase letter")
         return v
 
 
@@ -139,6 +141,33 @@ class AdminUserUpdate(BaseModel):
     role: Optional[UserRole] = None       # Reassign user role (e.g., promote to admin)
     is_active: Optional[bool] = None      # Enable or disable user account
     is_deleted: Optional[bool] = None     # Soft-delete or restore a user account
+
+
+class AdminUserCreate(UserBase):
+    password: str
+    role: UserRole = UserRole.student
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        if not any(char.isupper() for char in v):
+            raise ValueError("Password must contain an uppercase letter")
+        return v
+
+
+class AdminPasswordReset(BaseModel):
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        if not any(char.isupper() for char in v):
+            raise ValueError("Password must contain an uppercase letter")
+        return v
 
 
 class Token(BaseModel):

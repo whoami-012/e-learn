@@ -53,7 +53,7 @@ class HeaderSection extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
@@ -72,7 +72,7 @@ class HeaderSection extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.26),
+                        color: Colors.black.withValues(alpha: 0.26),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       )
